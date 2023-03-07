@@ -1,17 +1,18 @@
 % Hierarchical Risk Parity (HRP) Toolbox 
 % Version 1.0 (R2022b) 07-March-2023 
 %
-% Author:  	     Nina Matthews
+% Author: 	     Nina Matthews
 % Supervisor: 	 A/Prof. Tim Gebbie
 % Project: 		 Time- and Market-Conditioned Flexible Probabilities: 
 %		  		 in the Context of the South African Bond Market.
 % Last edit: 	 25/02/2023
 % Resources:     The MathWorks, Inc. (2019)  &  Marcos Lopez De Prado (2016) 
-%				 (See reference list below)		
+%			     (See reference list below)		
 %
-%    This program is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+%   This program was developed to be utilised in my MSc Dissertation. 
+%   The HRP package is used for portfolio optimisation for a variety of 
+%   portfolios consisting of different combinations of asset classes. 
+%   The functions come WITHOUT ANY WARRANTY.
 %
 % NO WARRANTY
 %
@@ -27,43 +28,31 @@
 %	Step 3: Recursive Bisection: Allocating the weights with bisection 
 %           algorithm.
 %
-% It will call on sub function files within /Source when executing the 
-% function. The Fn_HRP_estimate() function wraps all other sub function 
-% files into one implementation, executing all steps:
+% The hrpestimate() function wraps all other sub function files needed for
+% the HRP weights estimation into one implementation, executing all steps:
 %
 % The order of the files listed below correspond to their call order and 
 % their nesting structure, see the individual function files for further 
-% details on inputs and outputs of each. 
-% 1. Fn_HRP_estimate(assetCovar):
-%   1.1 quasiDiagSort(link)
-%        1.1.1 getLeafNodesInGroup(rootGroupNodeId, link)
-%   1.2 helperBisectHRP(assetCovar, sortedIdx)
-%            1.2.1 allocByInverseVariance(assetCovar(sortedIdx, sortedIdx))
+% details on inputs and outputs of each.
+% 1. hrpestimate(cov):
+%   1.1 qdiag(link)
+%        1.1.1 leafnodes(rootGroupNodeId, link)
+%   1.2 hrpbisect(cov, sortedIdx)
+%            1.2.1 ivp(cov(sortedIdx, sortedIdx))
 
 % General Functions:
-%   besaaip      - Allinprice for South African bonds using BESA specification
-%   besainfaip   - Allinprice for inflation linked bonds
-%   besatenor    - Bond tenor
-%   besaconv     - Bond Convexity
-%   besamoddur   - Bond Modified Duration
-%   besaimpytm   - Implied yield-to-maturity 
-%   besafwdprc   - Bond forward price
-%   besaoption   - Bond option using Blacks model as per BESA specification
-%   ncdproceeds  - NCD proceeds
-%   ncdmvalue    - NCD maturity value
-%   eqvalue      - Equivalent value of continuous rate
-%   settledate   - Settlement date rule
-%   valuedate    - Valuation date
-%   cpiratio     - Compute the CPI ratio for inflation link bonds
-%   cpirefdates  - Compute the reference dates for CPI data
-%   holidays     - Holidays and non-trading days in South Africa and the US
-%       
+%   hrpestimate  - HRP weight estimations 
+%   qdiag        - sorted asset index list for quasidiagonalized covar matrix 
+%   leafnodes    - leaf nodes for a given group node id
+%   hrpbisect    - recursively bisects assets and allocates weights using vip
+%   ivp		   - performs simple inverse-variance allocation
 % Test Code
-%   besa_gilts_001     - test allinprice computations
-%   besa_options_002   - test options pricing 
+%   hrp_weights_001 - generates the HRP weights for a portfolio of 10 assets
+%					  given a dummy dataset developed by De Prado. 
+%                     Results are consistent. 
 %
 % Test Data
-%   None at this time.
+%   Kipnis_covMat.csv
 % 
 % Obsolete functions.
 %   None at this time.
@@ -74,13 +63,8 @@
 % GUI Utilities.
 %   None at this time.
 
-% Copyright(c) 2004 Tim Gebbie
+% Copyright(c) 2023 Nina Matthews
 %
-%    This program is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-%
-% NO WARRANTY
 %
 % 11. BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
 % FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW.  EXCEPT WHEN
@@ -103,7 +87,8 @@
 % POSSIBILITY OF SUCH DAMAGES.
 %
 
-% $Revision: 1.4 $ $Date: 2006-03-30 15:39:31+02 $
+
+
 
 
 
