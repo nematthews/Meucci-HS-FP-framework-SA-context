@@ -1,16 +1,16 @@
-function w = hrpbisect(cov, sortedIdx)
+function w = hrpbisect(AssetCov, sortedIdx)
 % hrpbisect starts with the sorted list from the hierarchical
 % clustering tree, and recursively runs bisect allocation on each
 % sublist. 
 
 
 len = numel(sortedIdx);  % can be less than the number of assets
-nAssets = size(cov, 1);
+nAssets = size(AssetCov, 1);
 w = ones(nAssets, 1);
 
 % base case
 if len <= 2
-    w(sortedIdx) = ivp(cov(sortedIdx, sortedIdx));
+    w(sortedIdx) = ivp(AssetCov(sortedIdx, sortedIdx));
     return;
 end
 
@@ -21,11 +21,11 @@ left = sortedIdx(1:mid);
 right = sortedIdx(mid+1:len);
 
 % 1) bottom up to find the variance of the two groups
-wgtL = ivp(cov(left, left));
-wgtR = ivp(cov(right, right));
+wgtL = ivp(AssetCov(left, left));
+wgtR = ivp(AssetCov(right, right));
 
-varLeft = wgtL'*cov(left, left)*wgtL;
-varRight = wgtR'*cov(right, right)*wgtR;
+varLeft = wgtL'*AssetCov(left, left)*wgtL;
+varRight = wgtR'*AssetCov(right, right)*wgtR;
 
 % 2) top down rescaling of asset weights in inverse proportion to the two groups' variances
 alpha= 1-varLeft/(varLeft+varRight);
@@ -33,6 +33,6 @@ w(left) = alpha*w(left);
 w(right) = (1-alpha)*w(right);
 
 % recursively run this for the two sublists
-w = w.*hrpbisect(cov, left);
-w = w.*hrpbisect(cov, right);
+w = w.*hrpbisect(AssetCov, left);
+w = w.*hrpbisect(AssetCov, right);
 end
