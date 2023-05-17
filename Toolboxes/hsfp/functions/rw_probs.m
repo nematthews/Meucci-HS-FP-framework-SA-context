@@ -1,4 +1,4 @@
-function p_rw = rw_probs(w_len)
+function p_rw = rw_probs(X_timeTable,w_len)
 
 % rw_probs facilitates the calculation of the Time-conditioned probabilities
 % used in the HS-FP framework developed by Meucci (2010).
@@ -6,7 +6,7 @@ function p_rw = rw_probs(w_len)
 % the sequence of normalised Prs. Default window length = 60 mnths (5 yrs).
 
 % check default value: 60 = 5 yr rolling window
-if nargin < 1 || isempty(w_len)
+if nargin < 2 || isempty(w_len)
     w_len = 60; % Default value of w_len is set to 60
 end
 
@@ -15,5 +15,16 @@ end
 p(1:w_len) = 1;
 % normalises the array p so that the sum of its elements = 1.
 p_rw = p / sum(p);
+
+if nargin > 0 && ~isempty(X_timeTable)
+    % Adjust the length of p_rw to include 0's outside of window
+    x = length(p_rw);
+    y = height(X_timeTable);
+    
+    if x < y
+        zerosToAdd = y - x;
+        p_rw = [zeros(1, zerosToAdd), p_rw];
+    end
+end 
 end
 

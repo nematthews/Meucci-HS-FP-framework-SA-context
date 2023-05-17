@@ -22,30 +22,35 @@
 %
 % General Functions:
 %   xxxMainFNxx - xxxxxxx 
-%   rw_probs    -  facilitates the calculation of the Time-conditioned 
-%                      probabilities used in the HS-FP framework.
+%   rw_probs    -  facilitates the calculation of the time-conditioned 
+%                      Prs used in the HS-FP framework.
 %                      It uses window lengths specified in number of mnths
 %                      to generate the sequence of normalised Prs. 
 %                      Default window length = 60 mnths (5 yrs).
-%   xxxx    - 
+%   es_probs    -      Generates exponentially smoothed time-conditioned Prs 
+%                      Tau is the half-life decay: time it would take for 
+%                      Pr to decay to half the eval of T.
 %   xxxx    - 
 %                  
-%   xxx		     - 
+%   pr_plot	 -  Generates filled staircase plot of probabilities over 
+%               time period of the time table object x.
 %
-% Test Code
+%                
+%
+% Test Code.
 %   hsfp_probs_1 - xxxxx
 %
 % The hrpestimate() function wraps all other sub function files needed for
 % the HRP weights estimation into one implementation, executing all steps:
 %
 %
-% Test Data
-%   xxxxx
+% Test Data.
+%   ASSET Log Dif Returns (***** put file path? ***)
 % 
 % Obsolete functions.
 %   None at this time.
 %
-% Others
+% Others.
 %   None at this time.
 %
 % GUI Utilities.
