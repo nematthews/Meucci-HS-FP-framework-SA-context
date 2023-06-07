@@ -1,5 +1,5 @@
-function ticker_timetable = importfields2keep(fields,fileName) 
-% Loops through sheets of excel doc, where each sheet stores 
+function ticker_timetable = importfields2keep(fields,fileName)
+% Loops through sheets of excel doc, where each sheet stores
 % individual ticker data to import selected fields from all sheets
 
 % INPUTS:
@@ -8,6 +8,7 @@ function ticker_timetable = importfields2keep(fields,fileName)
 % fileName = file and its directory path
 % (type: string)
 
+%% 
 % define columns to keep from each sheet
 fieldsToKeep = fields;
 
@@ -17,14 +18,14 @@ excelSheetNames = sheetnames(fileName);
 ticker_timetable{numel(excelSheetNames)} = [];
 % Load the dataset by sheet
 for sheet = 1:numel(excelSheetNames)
-ticker_timetable{sheet} = readtimetable(fileName,'Sheet',excelSheetNames{sheet}, ...
-    VariableNamingRule='preserve', VariableNamesRange ='A6', ...
-    VariableDescriptionsRange = 'B4',Range='A6');
-% Assign the ticker as the timetable Description
-ticker_timetable{sheet}.Properties.Description = excelSheetNames{sheet};
-% from all columns remove all but 'varsToKeep'
-fieldsToRemove = setdiff(ticker_timetable{sheet}.Properties.VariableNames, fieldsToKeep);
-if ~isempty(fieldsToRemove)
-    ticker_timetable{sheet} = removevars(ticker_timetable{sheet}, fieldsToRemove);
-end
+    ticker_timetable{sheet} = readtimetable(fileName,'Sheet',excelSheetNames{sheet}, ...
+        VariableNamingRule='preserve', VariableNamesRange ='A6', ...
+        VariableDescriptionsRange = 'B4',Range='A6');
+    % Assign the ticker as the timetable Description
+    ticker_timetable{sheet}.Properties.Description = excelSheetNames{sheet};
+    % from all columns remove all but 'varsToKeep'
+    fieldsToRemove = setdiff(ticker_timetable{sheet}.Properties.VariableNames, fieldsToKeep);
+    if ~isempty(fieldsToRemove)
+        ticker_timetable{sheet} = removevars(ticker_timetable{sheet}, fieldsToRemove);
+    end
 end
