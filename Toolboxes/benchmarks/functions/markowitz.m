@@ -1,6 +1,9 @@
-function new_weights = Fn_Markowitz_RA(current_weights, pricesTT) 
+function new_weights = Fn_Markowitz_RA(current_weights, pricesTT)
 % Robust portfolio allocation taking into account risk aversion
 
+%%% Still to fix %%%%%
+
+%% 
 nAssets = size(pricesTT, 2);
 assetReturns = tick2ret(pricesTT);
 

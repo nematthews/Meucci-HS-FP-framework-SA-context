@@ -1,10 +1,15 @@
 function new_weights = eqweight(asset_ob)
 % Equal-weighted portfolio allocation based on number of assets in returns
 
+% INPUTS:
+% asset_ob: object consisting of multiple assets and returns over a period
+% Type: timetable or array/matrix
+
+%%
 % If asset_ob is a timetable: Number of assets
 if istimetable(asset_ob)
     nAssets = width(asset_ob);
-% If asset_ob is an array or matrix: Number of assets
+    % If asset_ob is an array or matrix: Number of assets
 else
     nAssets = size(asset_ob, 2);
 end
