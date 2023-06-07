@@ -5,6 +5,11 @@ function p_rw = rw_probs(X_timeTable,w_len)
 % It uses window lengths specified in number of months to generate
 % the sequence of normalised Prs. Default window length = 60 mnths (5 yrs).
 
+%INPUTS
+% X_timeTable - timetable of returns (any frequency)
+% w_len - window length (in same frequency as X_timeTable)
+
+%% 
 % check default value: 60 = 5 yr rolling window
 if nargin < 2 || isempty(w_len)
     w_len = 60; % Default value of w_len is set to 60

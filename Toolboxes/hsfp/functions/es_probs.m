@@ -4,9 +4,11 @@ function p_es = es_probs(X_timeTable, tau)
 % time-conditioned probabilities used in the HS-FP framework 
 % developed by Meucci (2010). 
 % 
-% Tau is the half-life decay: time it would take for Pr to decay to half
-% the eval of T.
+% INPUTS:
+% Tau - half-life decay (time it would take for Pr to decay to half
+% the eval of T.)
 
+%% 
 % Final point of Timetable 
 T = height(X_timeTable);
 

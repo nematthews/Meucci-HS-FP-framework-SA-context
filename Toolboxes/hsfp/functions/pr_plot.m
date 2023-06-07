@@ -1,10 +1,12 @@
 function fig = pr_plot(x, y, title_text)
 % generates filled staircase plot of probabilities over time period of x
 %
-% x is timetable object
-% y is array of Prs of equal length to height(x)
+% INPUTS:
+% x - timetable object
+% y - array of Prs of equal length to height(x)
 % title_text is a string object
 
+%%
 % check if title is provided
 if nargin < 3 || isempty(title_text)
     title_text = ""; % Default no title
