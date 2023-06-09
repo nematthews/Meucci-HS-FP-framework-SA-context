@@ -1,12 +1,14 @@
 function [z_ub, z_lb, p_cr] = cr_probs(signal_series, alpha, z_target)
-% Market conditioning for the HS-FP framework. Optimal Prs are set to 1 if
-% z_t falls within the bandwith range around the selected target value.
+% Single State variable Market conditioning using Crisp Probabilities for 
+% the HS-FP framework. 
+% Optimal Prs are set to 1 if z_t falls within the bandwidth range around 
+% the selected target value.
 
 % INPUT:
-% signal_series - smoothed & standardies timeseries for a single state var
+% signal_series - smoothed & standardised timeseries for a single state var
 % (type: array double, [1 x T])
 
-% alpha - range of probability for bandwith
+% alpha - range of probability for bandwidth
 % (type: double)
 
 % z_target - target value specific to the signal_series
@@ -74,3 +76,5 @@ end
 
 
 end
+
+
