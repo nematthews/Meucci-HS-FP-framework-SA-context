@@ -1,4 +1,4 @@
-function [z_ub, z_lb, p_cr] = cr_probs(signal_series, alpha, z_target)
+function [p_cr, z_ub, z_lb] = cr_probs(signal_series, alpha, z_target)
 % Single State variable Market conditioning using Crisp Probabilities for 
 % the HS-FP framework. 
 % Optimal Prs are set to 1 if z_t falls within the bandwidth range around 

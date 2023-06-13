@@ -1,4 +1,4 @@
-function p_rw = rw_probs(X_timeTable,w_len)
+function [p_rw,w_len] = rw_probs(X_timeTable,w_len)
 
 % rw_probs facilitates the calculation of the Time-conditioned probabilities
 % used in the HS-FP framework developed by Meucci (2010).
