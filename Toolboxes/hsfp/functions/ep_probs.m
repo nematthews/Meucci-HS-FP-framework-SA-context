@@ -13,20 +13,20 @@ function [post_pr] = ep_probs(signal_series, alpha, z_target, prior)
 %% Crisp Prs
 [p_cr] = cr_probs(signal_series, alpha, z_target);
 
-% Crisp Mean & Sigma
+% Crisp Mean & Sigma^2
 cr_mu = sum(p_cr*signal_series);
-cr_sigma = sum(p_cr*(signal_series.^2))- cr_mu^2;
+cr_variance = sum(p_cr*(signal_series.^2))- cr_mu^2;
 
 %% Entropy Pooling Setup %%
-% Inequality constraints based on crisp
-% 1st Moment to match: mu
+
+% Inequality constraints based on 2nd moments of crisp:
+% z^2 <= (mu)^2 + varaince
 a = (signal_series'.^2);   
-% 2nd Moment to match: sigma
-b = (cr_mu^2)+cr_sigma;  
+b = (cr_mu^2)+cr_variance;   
 
 % Equality constraints      
-aeq = [signal_series';ones(1,length(signal_series))];
-beq = [cr_mu;1];
+aeq = [signal_series';ones(1,length(signal_series))]; % Pr sum to 1
+beq = [cr_mu;1];   % Constrain the 1st moments
 
-post_pr = MinRelEntFP_001(prior', a,b,aeq,beq);
+post_pr = min_relative_entropy(prior', a,b,aeq,beq);
 end
