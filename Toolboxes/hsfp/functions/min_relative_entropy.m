@@ -1,13 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [p_post, DLagrang] = min_relative_entropy(prior, inequalityMatrix, inequalityVector, equalityMatrix, equalityVector, options)
-% min_relative_entropy() calculates the updated distribution (posterior) of
-% Flexible Probabilities using entropy pooling under linear constraints.
+% #################### Description ############ 
 
-% Specifically it allows for Time & State conditioning of FPs by begining
-% with the Crisp Prs and their moments with we then use to condition an
-% exponential decay. Due to the Entropy pooling we have a resulting mixture
-% of the kernel approach and the exponential decay that can
-% switch between Gaussian kernel and exponential kernel.
 
 % INPUTS
 % prior : [vector] (1 x T) Flexible probabilities (prior)

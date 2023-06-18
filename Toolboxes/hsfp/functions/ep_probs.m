@@ -1,7 +1,11 @@
 function [post_pr] = ep_probs(signal_series, alpha, z_target, prior)
 % Flexible probabilities conditioned via entropy pooling
 
-%%%%%%% ######## FIX INPUT TEXT TO OWN TEXT ###########
+% Specifically it allows for Time & State conditioning of FPs by begining
+% with an exponential decay prior and uses the Crisp Prs & its moments to 
+% for condition. Due to the Entropy pooling we have a resulting mixture
+% of the kernel approach and the exponential decay that can
+% switch between Gaussian kernel and exponential kernel. 
 
 % INPUT
 % Conditioner: [struct] with fields
