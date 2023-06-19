@@ -6,7 +6,7 @@ function p_knl = kl_probs(signal_series, h, gamma, z_target)
 
 % INPUT:
 % signal_series - smoothed & standardised timeseries for a single state var
-% (type: array double, [1 x T])
+% (type: array double, [T x 1])
 
 % h - controls the volatility and therefore level of smoothing
 % (type: double)

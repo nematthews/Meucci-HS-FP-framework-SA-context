@@ -6,7 +6,7 @@ function [p_cr, z_ub, z_lb] = cr_probs(signal_series, alpha, z_target)
 
 % INPUT:
 % signal_series - smoothed & standardised timeseries for a single state var
-% (type: array double, [1 x T])
+% (type: array double, [T x 1])
 
 % alpha - range of probability for bandwidth
 % (type: double)

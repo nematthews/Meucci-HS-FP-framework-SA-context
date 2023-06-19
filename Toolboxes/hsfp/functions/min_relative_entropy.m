@@ -1,19 +1,31 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [p_post, DLagrang] = min_relative_entropy(prior, inequalityMatrix, inequalityVector, equalityMatrix, equalityVector, options)
-% #################### Description ############ 
+% Calculates posterior probabilites from a supplied prior using the dual
+% Lagrangian multiplier and the Hessian. 
 
+% INPUTS: 
+% prior - desired prior probability distribution (usually exp smoothed Prs)
+% (Type: array double, [1 x T])
 
-% INPUTS
-% prior : [vector] (1 x T) Flexible probabilities (prior)
-% inequalityMatrix : [matrix] (l_ x T) pick matrix for combinations in inequality views
-% inequalityVector : [vector] (l_ x 1) vector that quantifies inequality views
-% equalityMatrix : [matrix] (m_ x T) pick matrix for combinations in equality views
-% equalityVector : [vector] (m_ x 1) vector that quantifies equality views
-% options : optimization options created with "optimoptions"
+% inequalityMatrix - matrix defining inequality views 
+% Here for z^2
+% (Type: matrix double, [1 x T])
 
-% OUTPUTS
-% p_pos : [vector] (1 x j_) Flexible probabilities (posterior)
-% lg_ : [vector] ((l_ + m_) x 1) optimal parameters of dual Lagrangian
+% inequalityVector - vector for the defined inequality views 
+% Here: (cr_mu^2)+cr_variance
+% (Type: double) 
+
+% equalityMatrix - equality constrains
+% Here: % Pr sum to 1
+% (Type: matrix, [number of EConstraints x T])
+
+% equalityVector - equality views 
+% Here: Constrain the 1st moments
+% (Type: array double, [number of EConstraints x 1])
+
+% options : options that can be specified for optimization
+% Note: specify using "optimoptions"
+
 
 numVariables = size(inequalityMatrix, 1);
 numEqualityConstraints = size(equalityMatrix, 1);
@@ -37,7 +49,7 @@ end
 
 lv0 = zeros(numVariables + numEqualityConstraints, 1);
 
-% Apply Lagrangian based on type of contraints:
+% Apply Lagrangian based on type of constraints:
 % 1. Lagrangian multiplier of view on mu, specify constraints: l_ != 0
 % 2. Lagrangian multiplier of view on sigma may = 0
 
@@ -47,6 +59,7 @@ if ~numVariables
         lv0, options);
     p_post = exp(log(prior) - 1 - v_' * equalityMatrix);
     DLagrang = v_;
+    
     % If EQUALITY & INEQUALITY
 else
     alpha = -eye(numVariables + numEqualityConstraints);
@@ -61,7 +74,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Nested function 1: Dual Langrang for equality constraints
-% Deals with aeq & beq 
+% Dual Langrangian and Hessina with aeq & beq
     function [mh, mgrad, mHess] = nestedmDLagrang_eq(v, prior, equalityMatrix, equalityVector, numEqualityConstraints)
 
         p = exp(log(prior) - 1 - v' * equalityMatrix);
@@ -85,7 +98,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Nested function 2: Dual Langrang for equality & inequality constraints
-% Deals with a & b
+% Dual Langrangian and Hessina with a & b
     function [mh, mgrad] = nestedmDLagrang(lv, prior, inequalityMatrix, inequalityVector, equalityMatrix , equalityVector, numVariables)
         l = lv(1 : numVariables);
         v = lv(numVariables + 1 : end);
@@ -106,7 +119,8 @@ end
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     function mHess = nestedmHessian(lv, lambda, prior, inequalityMatrix, equalityMatrix, numVariables, numEqualityConstraints)
-        % Hessian of opposite dual Lagrangian for inequality and equality constraints
+        % Hessian of opposite dual Lagrangian called by
+        % calculations for dual Lagrangian for inequality & equality constraints
         l = lv(1 : numVariables);
         v = lv(numVariables + 1 : end);
 
@@ -119,3 +133,5 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 end
+
+
