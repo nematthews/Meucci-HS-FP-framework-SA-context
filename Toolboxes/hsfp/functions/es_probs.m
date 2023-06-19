@@ -5,8 +5,13 @@ function p_es = es_probs(X_timeTable, tau)
 % developed by Meucci (2010). 
 % 
 % INPUTS:
+% X_timeTable - timeseries of asset returns that the Prs will later be
+% applied to.
+% (Type: TimeTable object)
+
 % Tau - half-life decay (time it would take for Pr to decay to half
 % the eval of T.)
+% (Type: double)
 
 %% 
 % Final point of Timetable 
