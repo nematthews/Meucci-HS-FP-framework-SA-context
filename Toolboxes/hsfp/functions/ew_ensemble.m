@@ -1,4 +1,4 @@
-function EW_Pr_ensemble = ew_ensemble(signal_TT, alpha, prior, target_method)
+function [EW_Pr_ensemble] = ew_ensemble(signal_TT, alpha, prior, target_method)
 % Calculates the equally weighted posterior ensemble flexible probabilities
 % via entropy pooling given Q conditioning variables (signals).
 
