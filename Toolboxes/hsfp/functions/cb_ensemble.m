@@ -1,6 +1,6 @@
  function [cb_ensemble, wts,ens_vals] = cb_ensemble(signal_TT, alpha, prior, target_method)
 % Calculates the Conditioned Bayesian Ensemble Posterior (CB_ensemble) 
-% flexible probabilities (also refered to as Degree of Conditioning & 
+% flexible probabilities (also referred to as Degree of Conditioning & 
 % Correlation (DCC) Flex Prs) via entropy pooling given Q conditioning 
 % variables (signals).
 
