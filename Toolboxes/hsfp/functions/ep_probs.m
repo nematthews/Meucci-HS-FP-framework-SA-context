@@ -24,7 +24,9 @@ function [post_pr] = ep_probs(signal_series, alpha, z_target, prior)
 % (type: array double [T x 1]) 
 
 %% Crisp Prs
-[p_cr] = cr_probs(signal_series, alpha, z_target);
+p_cr = cr_probs(signal_series, alpha, z_target);
+p_cr(p_cr==0)=10^-20;
+
 
 % Crisp Mean & Sigma^2
 cr_mu = sum(p_cr*signal_series);

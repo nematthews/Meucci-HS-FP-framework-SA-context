@@ -23,7 +23,7 @@ function p_knl = kl_probs(signal_series, h, gamma, z_target)
 z = signal_series;
  
     % kernel probabilites
-    p = exp((-(z-z_target).^gamma)/h); 
+    p = exp((-abs(z-z_target).^gamma)/h); 
 % Rescale
 p_knl = p/sum(p);
 
