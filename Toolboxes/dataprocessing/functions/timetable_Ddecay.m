@@ -10,7 +10,7 @@ function SIG_SMOOTHED_TT = timetable_Ddecay(data_TT, tau_f, tau_s)
 % 'data_TT'.
 
 % INPUTS:
-% data = unscaled state variable data e.g. Volatility index, inflation etc.
+% data = unscaled state variables data e.g. Volatility index, inflation etc.
 % (type: timetable)
 % tau_f = fast half-life at which decay volatilities
 % (type: double)

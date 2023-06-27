@@ -25,7 +25,7 @@ function [post_pr] = ep_probs(signal_series, alpha, z_target, prior)
 
 %% Crisp Prs
 p_cr = cr_probs(signal_series, alpha, z_target);
-p_cr(p_cr==0)=10^-20;
+% p_cr(p_cr==0)=10^-20;
 
 
 % Crisp Mean & Sigma^2
