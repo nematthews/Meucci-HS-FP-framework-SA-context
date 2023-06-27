@@ -27,6 +27,7 @@ z = zeros(1, T);
 % Apply 1st decay function using HS-FP exp decay probabilities
 for t = 1:T
     p_es_fast = exp(-log(2) / tau_f * (t - timestamp(1:t)));
+    p_es_fast(p_es_fast==0)=10^-250;
     gamma_f = sum(p_es_fast);
     z(t) = sum(p_es_fast .* state_sig(1:t)) / gamma_f;
 end
@@ -38,11 +39,12 @@ sd_est = zeros(1, T);
 
 for t = 1:T
     p_es_slow = exp(-log(2) / tau_s * (t - timestamp(1:t)));
+    p_es_slow(p_es_slow==0)=10^-250;
     gamma_s = sum(p_es_slow);
-    % Muecci's double decay calc for mu and Sig
+    % Mecci's double decay calc for mu and Sig
     mu_est(t) = sum(p_es_slow .* z(1:t)) / gamma_s;
     mu2_est(t) = sum(p_es_slow .* z(1:t).^2) / gamma_s;
-    sd_est(t) = sqrt(mu2_est(t) - mu_est(t)^2);
+    sd_est(t) = sqrt(mu2_est(t) - (mu_est(t))^2);
 end
 % calc z-scores 
 z = ((z - mu_est) ./ sd_est)';
