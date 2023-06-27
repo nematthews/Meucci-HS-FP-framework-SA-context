@@ -1,4 +1,4 @@
-function SIG_SMOOTHED_TT = timetable_expDdecay(data_TT, tau_f, tau_s)
+function SIG_SMOOTHED_TT = timetable_Ddecay(data_TT, tau_f, tau_s)
 % Uses Meucci's double exponential decay method (2010)
 % (based on Holt's linear method) to smooth data
 % to reduce noise. Follows on to standardising the data for comparative
