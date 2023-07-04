@@ -1,4 +1,4 @@
-function SIG_SMOOTHED_TT = timetable_Ddecay(data_TT, tau_f, tau_s)
+function [SIG_SMOOTHED_TT, test_z, test_mu] = timetable_Ddecay(data_TT, tau_f, tau_s)
 % Uses Meucci's double exponential decay method (2010)
 % (based on Holt's linear method) to smooth data
 % to reduce noise. Follows on to standardising the data for comparative
@@ -22,7 +22,14 @@ function SIG_SMOOTHED_TT = timetable_Ddecay(data_TT, tau_f, tau_s)
 varNames = data_TT.Properties.VariableNames;
 
 % Initialize the double decay or Holt's linear forecasted values
-SIG_SMOOTHED_TT = timetable('RowTimes', data_TT.Dates);
+try
+    % Try creating SIG_SMOOTHED_TT using data_TT.Dates
+    SIG_SMOOTHED_TT = timetable('RowTimes', data_TT.Dates);
+catch
+    % If an error occurs, create SIG_SMOOTHED_TT using data_TT.Time
+    SIG_SMOOTHED_TT = timetable('RowTimes', data_TT.Time);
+end
+
 
 % Loop over each column/variable in the timetable
 for i = 1:length(varNames)
@@ -55,7 +62,7 @@ for i = 1:length(varNames)
             z(t) = sum(p_es_fast .* state_sig{1:t,1}') / gamma_f;
         end
     end
-
+    test_z = z;
 
     % Standardise: z-scoring
     mu_est = zeros(1, T);
@@ -74,6 +81,7 @@ for i = 1:length(varNames)
             mu2_est(t) = sum(p_es_slow .* z(1:t).^2) / gamma_s;
             sd_est(t) = sqrt(mu2_est(t) - (mu_est(t))^2);
         end
+        test_mu = mu_est;
     end
     % calc z-scores
     z = ((z - mu_est) ./ sd_est)';
