@@ -1,4 +1,4 @@
- function [cb_ensemble, wts,ens_vals] = cb_ensemble(signal_TT, alpha, prior, target_method)
+function [cb_ensemble, wts,ens_vals] = cb_ensemble(signal_TT, alpha, prior, target_method,wt_method)
 % Calculates the Conditioned Bayesian Ensemble Posterior (CB_ensemble) 
 % flexible probabilities (also referred to as Degree of Conditioning & 
 % Correlation (DCC) Flex Prs) via entropy pooling given Q conditioning 
@@ -24,12 +24,24 @@
 %          'mean' - average over time T for each sig.         
 % (Type: str|char)
 
-%%
+% w_method - defines how the final weighted average is calculated 
+% Options: 'log-linear' - log-linear weighted average (Default)
+%          'simple' - simple weighted average        
+% (Type: str|char)
+
+%% check inputs
+
 % check default method set for z_target
 if nargin < 4|| isempty(target_method)
     target_method = 'latest'; 
 end
 
+% check default weighting method to log-linear
+if nargin < 5|| isempty(wt_method)
+    wt_method = 'log-linear';
+end
+
+%% Entropy & ENS
 Q = width(signal_TT);
 
 Post_pr_storage = zeros(size(signal_TT));
@@ -91,15 +103,28 @@ for sig = 1:Q
     d_indicators(sig) = (1/(Q-1)).*sum(hellinger_dists(:,sig),1);
 end
 
-%% 6. Weights
-weighted_pr_storage = zeros(size(signal_TT));
+%% 6. Weights using simple weighted average
+% weighted_pr_storage = zeros(size(signal_TT));
 products = ens_vals.*d_indicators;
 wts = products/sum(products);
 
-for sig = 1:Q
-weighted_pr_storage(:,sig) = wts(sig)*Post_pr_storage(:,sig);
+%% 7. Weighting all Q probabilities together
+
+% 7.1 Simple weighted average
+if strcmp(wt_method, 'simple')
+    weighted_pr_storage = wts .* Post_pr_storage;
+    cb_ensemble = sum(weighted_pr_storage, 2)';
+% 7.2 Log-linear weighted average
+elseif strcmp(wt_method, 'log-linear')
+    logged_priors = log(Post_pr_storage);
+    weighted_pr_storage = wts.*logged_priors;
+    cb_ensemble = sum(weighted_pr_storage,2)';
+    cb_ensemble = exp(cb_ensemble);
+end
+%%
+   % Scale 
+    cb_ensemble = cb_ensemble./sum(cb_ensemble);
+
 end
 
-% Sum across the rows
-cb_ensemble = sum(weighted_pr_storage, 2)';
-end
+
