@@ -61,6 +61,15 @@ for i = 1:length(varNames)
             gamma_f = sum(p_es_fast);
             z(t) = sum(p_es_fast .* state_sig{1:t,1}') / gamma_f;
         end
+        %%%%%% Can try to change the above to matrix notation later %%%%%%
+        %         z = nan(T, 1);
+        %         valid_indices = ~isnan(state_sig);
+        %         p_es_fast = exp(-log(2) / tau_f * (1:T));
+        %         p_es_fast(p_es_fast == 0) = 10^-250;
+        %         gamma_f = cumsum(p_es_fast);
+        %
+        %         z(valid_indices) = cumsum(p_es_fast(valid_indices) .* state_sig(valid_indices)) ./ gamma_f(valid_indices)';
+
     end
     test_z = z;
 
@@ -83,6 +92,21 @@ for i = 1:length(varNames)
         end
         test_mu = mu_est;
     end
+    %%%%%% Can try to change the above to matrix notation later %%%%%%
+    %     mu_est = zeros(1, T);
+    %     mu2_est = zeros(1, T);
+    %     sd_est = zeros(1, T);
+    %     valid_indices = ~isnan(state_sig);
+    %     p_es_slow = exp(-log(2) / tau_s * (1:T));
+    %     p_es_slow(p_es_slow == 0) = 10^-250;
+    %     gamma_s = cumsum(p_es_slow);
+    %
+    %     mu_est(valid_indices) = cumsum(p_es_slow(valid_indices) .* z(valid_indices)) ./ gamma_s(valid_indices);
+    %     mu2_est(valid_indices) = cumsum(p_es_slow(valid_indices) .* z(valid_indices).^2) ./ gamma_s(valid_indices);
+    %     sd_est(valid_indices) = sqrt(mu2_est(valid_indices) - mu_est(valid_indices).^2);
+    %     test_mu = mu_est;
+
+
     % calc z-scores
     z = ((z - mu_est) ./ sd_est)';
 
