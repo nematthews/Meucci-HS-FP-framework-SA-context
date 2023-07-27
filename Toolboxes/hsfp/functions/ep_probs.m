@@ -23,12 +23,17 @@ function [post_pr] = ep_probs(signal_series, alpha, z_target, prior)
 % prior - desired prior probability distribution (usually exp smoothed Prs)
 % (type: array double [T x 1]) 
 
+if isa(signal_series,'timetable')
+    signal_series = table2array(signal_series);
+end
+
 %% Crisp Prs
 p_cr = cr_probs(signal_series, alpha, z_target);
 % p_cr(p_cr==0)=10^-20;
 
 
 % Crisp Mean & Sigma^2
+
 cr_mu = sum(p_cr*signal_series);
 cr_variance = sum(p_cr*(signal_series.^2))- cr_mu^2;
 

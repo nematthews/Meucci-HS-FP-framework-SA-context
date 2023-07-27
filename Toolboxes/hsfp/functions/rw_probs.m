@@ -7,12 +7,12 @@ function [p_rw,w_len] = rw_probs(X_timeTable,w_len)
 
 %INPUTS
 % X_timeTable - time series of asset returns (any frequency)
-% (Type: Timetable object)
+% (Type: Timetable object | array)
 
 % w_len - window length (in same frequency as X_timeTable)
 % (Type: double)
 
-%% 
+%%
 % check default value: 60 = 5 yr rolling window
 if nargin < 2 || isempty(w_len)
     w_len = 60; % Default value of w_len is set to 60

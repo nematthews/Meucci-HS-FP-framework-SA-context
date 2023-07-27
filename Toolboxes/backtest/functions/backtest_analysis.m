@@ -1,4 +1,4 @@
-function [hsfp_mu , hsfp_cov] = backtest_analysis(return_data,Window,Rfr,p_type)
+function [hsfp_mu , hsfp_cov] = backtest_analysis(backtest_object,Window,Rfr,p_type)
 
 % NOTE: This function is very use specific to this project. It was created 
 % to streamline the project code therefore does not generalise well.
@@ -18,6 +18,7 @@ function [hsfp_mu , hsfp_cov] = backtest_analysis(return_data,Window,Rfr,p_type)
 % (Type: char|str )
 
 %%
+return_data = backtest_object.returns;
 
 tickersToExtract = {'JALSHTR_Index', 'JIBA3M_Index','ALBTR_Index'};
 BF_BH_TT = return_data(:, tickersToExtract);
@@ -49,9 +50,14 @@ Overlap_tsCM_Wts0 = [0.60,0.05,0.35]; % [equity, cash, bonds] - balanced fund 60
 Overlap_tsCM_Wts = zeros(m,3); 
 Overlap_tsCM_PRet = zeros(m,1); 
 
+%% Setup backtest objects for backtest moment calculations
 
+%% Begin bakctest window shifts
 for t=Window:m-1
-   
+%     backtest_object.returns = return_data{1+t-Window:t-1, :};
+  
+    % Need to calc pr for each window (but type stays the same)
+%  [hsfp_mu, hsfp_cov,p] = backtest_moments(backtest_object)
 %%%%% need new stats of new window each time %%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   m_t = mean(return_data{1+t-Window:t-1, :});

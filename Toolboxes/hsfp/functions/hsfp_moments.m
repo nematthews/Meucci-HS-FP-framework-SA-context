@@ -29,7 +29,7 @@ centered_array = returns_array - hsfp_mu;
 hsfp_cov = centered_array' * (centered_array .* p'); 
 % any asymmetries in the matrix are corrected by averaging covar matrix 
 % with its transpose.
-hsfp_cov = (hsfp_cov + hsfp_cov') / 2; 
+ hsfp_cov = (hsfp_cov + hsfp_cov') / 2; 
 
 end
 
