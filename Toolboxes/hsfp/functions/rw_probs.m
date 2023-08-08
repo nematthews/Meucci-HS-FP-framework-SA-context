@@ -1,4 +1,4 @@
-function [p_rw,w_len] = rw_probs(X_timeTable,w_len)
+function [p_rw,w_len] = rw_probs(Sig_timeTable,w_len)
 
 % rw_probs facilitates the calculation of the Time-conditioned probabilities
 % used in the HS-FP framework developed by Meucci (2010).
@@ -6,7 +6,7 @@ function [p_rw,w_len] = rw_probs(X_timeTable,w_len)
 % the sequence of normalised Prs. Default window length = 60 mnths (5 yrs).
 
 %INPUTS
-% X_timeTable - time series of asset returns (any frequency)
+% Sig_timeTable - time series of state signals (any frequency)
 % (Type: Timetable object | array)
 
 % w_len - window length (in same frequency as X_timeTable)
@@ -24,10 +24,10 @@ p(1:w_len) = 1;
 % normalises the array p so that the sum of its elements = 1.
 p_rw = p / sum(p);
 
-if nargin > 0 && ~isempty(X_timeTable)
+if nargin > 0 && ~isempty(Sig_timeTable)
     % Adjust the length of p_rw to include 0's outside of window
     x = length(p_rw);
-    y = height(X_timeTable);
+    y = height(Sig_timeTable);
     
     if x < y
         zerosToAdd = y - x;

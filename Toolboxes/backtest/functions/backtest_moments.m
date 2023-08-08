@@ -1,4 +1,4 @@
-function [hsfp_mu, hsfp_cov,p] = backtest_moments(backtest_object)
+function [hsfp_mu, hsfp_cov,p] = backtest_moments(backtest_object,Window,t)
 
 % NOTE: This function is very use specific to this project. It was created
 % to streamline the project code therefore does not generalise well.
@@ -13,12 +13,15 @@ function [hsfp_mu, hsfp_cov,p] = backtest_moments(backtest_object)
 % 1. backtest_object.returns - historical returns data for J assets
 % (Type: TimeTable [T x J])
 
-% 2. backtest_object.signals - time series of Q tate signals.
+% 2. backtest_object.signals - time series of Q state signals.
 % (Type: Timetable, [T x Q])
 
 % 3. backtest_object.method - Method to calculate HSFP flexible probabilities.
 % (Type: char|str )
-% Options:   - rolling_w
+% Options:   - none (default) NOTE: this is not defined below as it is
+%                                   only used in backtest fn to rather use 
+%                                   normal mean and cov. 
+%            - rolling_w
 %            - exp_decay
 %            - crisp
 %            - kernel
@@ -36,8 +39,8 @@ function [hsfp_mu, hsfp_cov,p] = backtest_moments(backtest_object)
 %% Example: backtest_object expected  (this case window needed for rolling_w)
 % hsfp_parameters = struct('window',[],'tau',[],'alpha',[],'z_target',[],
 % 'gamma',[],'h',[], 'EPool_prior',[], 'z_target_method', [],'ensemble_wt_method',[]);
-% hsfp_parameters.window = Window_len
-%
+% hsfp_parameters.window = Window_len (NOTE: cannot exceed Window length
+% specified in backtest_analysis.m Fn.)
 % backtest_object = struct('returns',[],'signals',[],'method',[], 'parameters',[]);
 % backtest_object.returns = returns_TT;
 % backtest_object.signals = SIG_SMOOTHED_TT(:,'lagged_SACPIYOY_Index'); % NB: needs to be a timetable object

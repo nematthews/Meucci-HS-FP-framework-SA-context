@@ -1,12 +1,11 @@
-function p_es = es_probs(X_timeTable, tau)
+function p_es = es_probs(Sig_timeTable, tau)
 % exponential smoothing
 % es_probs facilitates the calculation of exponentially smoothed 
 % time-conditioned probabilities used in the HS-FP framework 
 % developed by Meucci (2010). 
 % 
 % INPUTS:
-% X_timeTable - timeseries of asset returns that the Prs will later be
-% applied to.
+% Sig_timeTable - timeseries of state signals 
 % (Type: TimeTable object)
 
 % Tau - half-life decay (time it would take for Pr to decay to half
@@ -15,7 +14,7 @@ function p_es = es_probs(X_timeTable, tau)
 
 %% 
 % Final point of Timetable 
-T = height(X_timeTable);
+T = height(Sig_timeTable);
 
 % check default value: tau = 24 mnths (2 yrs)
 if nargin < 2 || isempty(tau)
@@ -25,6 +24,6 @@ end
 % exp decay fn
 p = exp(-(log(2)/tau)*(T-(1:T)'));
 % Rescale
-p_es = p/sum(p);
+p_es = (p/sum(p))';
 
 end

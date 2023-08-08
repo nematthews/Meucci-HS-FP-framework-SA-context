@@ -30,7 +30,7 @@ pwgt = estimateFrontier(p, 20);
 [frontier_rsk_vec, frontier_return_vec] = estimatePortMoments(p, pwgt);
 %% Optimize for Sharpe Ratio
 % Estimate portfolio wts with maximum SR objective
-SR_wts = estimateMaxSharpeRatio(p,'Method','iterative');
+SR_wts = estimateMaxSharpeRatio(p,'Method','iterative','TolX', 1e-15);
 SR_opt_wts = SR_wts';
 % Estimate risk and return for optimal port
 [MV_SR_sdv, MV_SR_return] = estimatePortMoments(p,SR_wts);

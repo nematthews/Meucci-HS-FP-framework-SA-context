@@ -20,7 +20,9 @@ function [hsfp_mu , hsfp_cov] = hsfp_moments(p,returns_TT)
 % (Type: TimeTable [T x J])
 
 %%
-returns_array = table2array(returns_TT);
+if istimetable(returns_TT)
+    returns_array = table2array(returns_TT);
+end
 % Mu
 hsfp_mu = p * returns_array; 
 % Centre scenarios to account for variation on mean
@@ -30,6 +32,5 @@ hsfp_cov = centered_array' * (centered_array .* p');
 % any asymmetries in the matrix are corrected by averaging covar matrix 
 % with its transpose.
  hsfp_cov = (hsfp_cov + hsfp_cov') / 2; 
-
 end
 
