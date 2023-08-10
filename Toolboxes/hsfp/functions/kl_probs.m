@@ -17,9 +17,20 @@ function p_knl = kl_probs(signal_series, h, gamma, z_target)
 % (type: double)
 
 % z_target - target value specific to the signal_series
-% (type: double)
+%          - Options: scalar value chosen by user
+%                     'latest'  give latest value in signal_series
+%                     'mean' gives average across singal series
+% (type: double| str| char)
+
 %%
 %%%%%%%%%%%%%%%%%%%%%%%
+if strcmp(z_target, 'mean')
+    z_target = mean(signal_series);
+
+elseif strcmp(z_target, 'latest')
+    z_target = signal_series(end);
+end
+
 z = signal_series;
 
 % kernel probabilites

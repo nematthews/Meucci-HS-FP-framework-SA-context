@@ -1,4 +1,4 @@
-function [cb_ensemble, wts,ens_vals] = cb_ensemble(signal_TT, alpha, prior, target_method, wt_method)
+function [cb_ensemble, wts,ens_vals] = cb_ensemble(signal_TT, alpha, tau_prior, z_target, wt_method)
 % Calculates the Conditioned Bayesian Ensemble Posterior (CB_ensemble) 
 % flexible probabilities (also referred to as Degree of Conditioning & 
 % Correlation (DCC) Flex Prs) via entropy pooling given Q conditioning 
@@ -19,10 +19,11 @@ function [cb_ensemble, wts,ens_vals] = cb_ensemble(signal_TT, alpha, prior, targ
 % prior - desired prior probability distribution (usually exp smoothed Prs)
 % (type: array double [T x 1])
 
-% target_method - defines how target value should be selected
+% z_target - defines how target value should be selected
 % Options: 'latest' - most recent observation of sig at time T (Default).
 %          'mean' - average over time T for each sig.         
-% (Type: str|char)
+% (Type: str|char)     
+% NOTE: unlike other Fns, here a scalar will not be accepted as z_target
 
 % w_method - defines how the final weighted average is calculated 
 % Options: 'log-linear' - log-linear weighted average (Default)
@@ -32,8 +33,8 @@ function [cb_ensemble, wts,ens_vals] = cb_ensemble(signal_TT, alpha, prior, targ
 %% check inputs
 
 % check default method set for z_target
-if nargin < 4|| isempty(target_method)
-    target_method = 'latest'; 
+if nargin < 4|| isempty(z_target)
+    z_target = 'latest'; 
 end
 
 % check default weighting method to log-linear
@@ -50,13 +51,13 @@ ens_vals = zeros(1, Q);
 % Obtain the posterior Pr & ENS per Signal
 for sig = 1:width(signal_TT)
     signal_series = signal_TT{:,sig};
-    if strcmp(target_method, 'mean')
-        z_target = mean(signal_series);
-    elseif strcmp(target_method, 'latest')
-        z_target = signal_series(end);
+    if strcmp(z_target, 'mean')
+        z_target_val = mean(signal_series);
+    elseif strcmp(z_target, 'latest')
+        z_target_val = signal_series(end);
     end
     %% 1. Get posterior via Entropy Pooling
-    Post_pr_storage(:,sig) = ep_probs(signal_series, alpha, z_target, prior);
+    Post_pr_storage(:,sig) = ep_probs(signal_series, alpha, tau_prior, z_target_val);
     %% 2. ENS
     ens_vals(sig) = ens(Post_pr_storage(:,sig)');
 end

@@ -66,7 +66,7 @@ elseif strcmp(backtest_object.method, 'kernel')
 
 elseif strcmp(backtest_object.method, 'e_pooling')
     p = ep_probs(backtest_object.signals, backtest_object.parameters.alpha, ...
-        backtest_object.parameters.z_target,backtest_object.parameters.EPool_prior);
+        backtest_object.parameters.z_target,backtest_object.parameters.tau_prior);
 
 elseif strcmp(backtest_object.method, 'ew_ensemble')
     p = ew_ensemble(backtest_object.signals, backtest_object.parameters.alpha, ...
