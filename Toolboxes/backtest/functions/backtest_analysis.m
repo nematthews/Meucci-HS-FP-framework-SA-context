@@ -1,4 +1,4 @@
-function [Rolling_portfolioSet,Realised_tsPIndx,Realised_tsPRet,Opt_tsWts,t,hsfp_Prs] = backtest_analysis(backtest_object,Window,Rfr)
+function [Rolling_portfolioSet,SR_Overall_Cash,Realised_tsPIndx,Realised_tsPRet,Opt_tsWts,t,hsfp_Prs] = backtest_analysis(backtest_object,Window,Rfr)
 
 % NOTE: This function is very use specific to this project. It was created
 % to streamline the project code therefore does not generalise well.
@@ -74,8 +74,8 @@ for t=Window:m-1
         cov_t = cov(returns_data{1+t-Window:t-1,:});
     else
         % Shift windows of returns and signals for HSFP each loop
-         backtest_object.returns = returns_data(1+t-Window:t-1, :);
-         backtest_object.signals = signals_data(1+t-Window:t-1, :);
+        backtest_object.returns = returns_data(1+t-Window:t-1, :);
+        backtest_object.signals = signals_data(1+t-Window:t-1, :);
         % Need to calc pr for each window (but type stays the same)
         [m_t, cov_t,hsfp_Prs] = backtest_moments(backtest_object,Window,t);
     end
@@ -166,25 +166,31 @@ Realised_tsPRet{7} = Overlap_tsALBI_PRet;
 Realised_tsPRet{8} = Overlap_tsCash_PRet;
 
 
-% %(********  Rewrite for return series to save to array then calc
-% cummulative ret
 %% 6. Backtest Portfolio SHARPE RATIOS %%%%%%%%%%%
 % ### 1. Equally Weighted (EW)###
-SR_Overall_EW = (mean(Overlap_tsEW_PRet(Window:t,:))- Rfr)/std(Overlap_tsEW_PRet(Window:t,:));
+SR_Overall_EW = (mean(Overlap_tsEW_PRet(Window:t,:))- ...
+    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsEW_PRet(Window:t,:));
 % ### 2. SR Maximizing ###
-SR_Overall_MVSR = (mean(Overlap_tsSR_PRet(Window:t,:))-Rfr)/std(Overlap_tsSR_PRet(Window:t,:));
+SR_Overall_MVSR = (mean(Overlap_tsSR_PRet(Window:t,:))- ...
+    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsSR_PRet(Window:t,:));
 % ### 3. Balanced Fund Buy-Hold ###
-SR_Overall_BH = (mean(Overlap_tsBH_PRet(Window:t,:))-Rfr)/std(Overlap_tsBH_PRet(Window:t,:));
+SR_Overall_BH = (mean(Overlap_tsBH_PRet(Window:t,:))- ...
+    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsBH_PRet(Window:t,:));
 % ### 4. HRP ###
-SR_Overall_HRP = (mean(Overlap_tsHRP_PRet(Window:t,:))-Rfr)/std(Overlap_tsHRP_PRet(Window:t,:));
+SR_Overall_HRP = (mean(Overlap_tsHRP_PRet(Window:t,:))- ...
+    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsHRP_PRet(Window:t,:));
 % ### 5. Balanced Fund Constant Mix (CM) ###
-SR_Overall_CM = (mean(Overlap_tsCM_PRet(Window:t,:))-Rfr)/std(Overlap_tsCM_PRet(Window:t,:));
+SR_Overall_CM = (mean(Overlap_tsCM_PRet(Window:t,:))- ...
+    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsCM_PRet(Window:t,:));
 % ### 6. ALSI - Equity Proxy ###
-SR_Overall_ALSI = (mean(Overlap_tsALSI_PRet)-Rfr)/std(Overlap_tsALSI_PRet);
+SR_Overall_ALSI = (mean(Overlap_tsALSI_PRet)- ...
+    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsALSI_PRet);
 % ### 7. ALBI - Bonds Proxy ###
-SR_Overall_ALBI = (mean(Overlap_tsALBI_PRet)-Rfr)/std(Overlap_tsALBI_PRet);
+SR_Overall_ALBI = (mean(Overlap_tsALBI_PRet)- ...
+    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsALBI_PRet);
 % ### 8. JIBA3M - Cash Proxy ###
-SR_Overall_Cash = (mean(Overlap_tsCash_PRet)-Rfr)/std(Overlap_tsCash_PRet);
+SR_Overall_Cash = (mean(Overlap_tsCash_PRet)- ...
+    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsCash_PRet);
 
 %% 7. Portfolio PERFORMANCE: %%%%%%%%%%%
 %  1. Calculate Geometrically Compounded Returns
