@@ -1,4 +1,4 @@
-function [Rolling_portfolioSet,SR_Overall_Cash,Realised_tsPIndx,Realised_tsPRet,Opt_tsWts,t,hsfp_Prs] = backtest_analysis(backtest_object,Window,Rfr)
+function [Rolling_portfolioSet,Realised_tsPIndx,Realised_tsPRet,Opt_tsWts,t,hsfp_Prs] = backtest_analysis(backtest_object,Window,Rfr)
 
 % NOTE: This function is very use specific to this project. It was created
 % to streamline the project code therefore does not generalise well.
@@ -21,11 +21,15 @@ function [Rolling_portfolioSet,SR_Overall_Cash,Realised_tsPIndx,Realised_tsPRet,
 % NOTE: if p_type = 'rolling_w' ensure w_len < Window.
 
 %% 1. Set up storage and initialise weights for Backtest %%%%%%%%%%%
+portfolio_names = {'EW (CM)', 'MVSR max', 'BalFund (BH)', 'HRP', ...
+    'BalFund (CM)', 'ALSI', 'ALBI', 'Cash'};
+
 returns_data = backtest_object.returns;
 signals_data = backtest_object.signals;
 
 tickersToExtract = {'JALSHTR_Index', 'Cash','ALB_Index'};
 BF_BH_TT = returns_data(:, tickersToExtract);
+returns_data = removevars(returns_data,'JALSHTR_Index');
 
 %###### initialize storage and inputs:
 [m,n]=size(returns_data); % size of full data set
@@ -126,7 +130,7 @@ end
 
 
 %% 3. Alternative Benchmarks: ALSI & ALBI & Cash (JIBA3M) %%%%%%%%%%%
-Overlap_tsALSI_PRet = table2array(returns_data(Window:t, 'JALSHTR_Index'));
+Overlap_tsALSI_PRet = table2array(BF_BH_TT(Window:t, 'JALSHTR_Index'));
 % 0 to start of series to match length of return series from backtest loop
 Overlap_tsALSI_PRet(1, :) = 0;
 Overlap_tsALBI_PRet = table2array(returns_data(Window:t, 'ALB_Index'));
@@ -141,62 +145,67 @@ Overlap_tsCash_PRet(1, :) = 0;
 % assets. eg SR has 6 but BF have 3.
 
 % Initialize the cell array
-Opt_tsWts = cell(5, 1);
+Opt_tsWts = cell(2, 5);
 
 % Assign the vectors to each cell in the cell array
-Opt_tsWts{1} = Overlap_tsEW_Wts(Window:t,:);
-Opt_tsWts{2} = Overlap_tsSR_Wts(Window:t,:);
-Opt_tsWts{3} = Overlap_tsBH_Wts0(Window:t,:);
-Opt_tsWts{4} = Overlap_tsHRP_Wts(Window:t,:);
-Opt_tsWts{5} = Overlap_tsCM_Wts(Window:t,:);
+% Have portfolio Type as seperate arrays to identify cells
+Opt_tsWts(1,:) = portfolio_names(1:5);
+Opt_tsWts{2,1} = Overlap_tsEW_Wts(Window:t,:);
+Opt_tsWts{2,2} = Overlap_tsSR_Wts(Window:t,:);
+Opt_tsWts{2,3} = Overlap_tsBH_Wts0(Window:t,:);
+Opt_tsWts{2,4} = Overlap_tsHRP_Wts(Window:t,:);
+Opt_tsWts{2,5} = Overlap_tsCM_Wts(Window:t,:);
 
 %% 5. Package RETURNS for OUTPUT:
 % Trim resulting to window & store in cell array %%%%%%%%%%%
 % Initialize the cell array
-Realised_tsPRet = cell(8, 1);
+Realised_tsPRet = cell(2, 8);
 
-% Assign the vectors to each cell in the cell array
-Realised_tsPRet{1} = Overlap_tsEW_PRet(Window:t,:);
-Realised_tsPRet{2} = Overlap_tsSR_PRet(Window:t,:);
-Realised_tsPRet{3} = Overlap_tsBH_PRet(Window:t,:);
-Realised_tsPRet{4} = Overlap_tsHRP_PRet(Window:t,:);
-Realised_tsPRet{5} = Overlap_tsCM_PRet(Window:t,:);
-Realised_tsPRet{6} = Overlap_tsALSI_PRet;
-Realised_tsPRet{7} = Overlap_tsALBI_PRet;
-Realised_tsPRet{8} = Overlap_tsCash_PRet;
+
+% Assign the names to the first row of the cell array
+Realised_tsPRet(1,:) = portfolio_names;
+Realised_tsPRet{2,1} = Overlap_tsEW_PRet(Window:t,:);
+Realised_tsPRet{2,2} = Overlap_tsSR_PRet(Window:t,:);
+Realised_tsPRet{2,3} = Overlap_tsBH_PRet(Window:t,:);
+Realised_tsPRet{2,4} = Overlap_tsHRP_PRet(Window:t,:);
+Realised_tsPRet{2,5} = Overlap_tsCM_PRet(Window:t,:);
+Realised_tsPRet{2,6} = Overlap_tsALSI_PRet;
+Realised_tsPRet{2,7} = Overlap_tsALBI_PRet;
+Realised_tsPRet{2,8} = Overlap_tsCash_PRet;
 
 
 %% 6. Backtest Portfolio SHARPE RATIOS %%%%%%%%%%%
 % ### 1. Equally Weighted (EW)###
-SR_Overall_EW = (mean(Overlap_tsEW_PRet(Window:t,:))- ...
-    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsEW_PRet(Window:t,:));
+SR_Overall_EW = sqrt(12)*((mean(Overlap_tsEW_PRet(Window:t,:))- ...
+    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsEW_PRet(Window:t,:)));
 % ### 2. SR Maximizing ###
-SR_Overall_MVSR = (mean(Overlap_tsSR_PRet(Window:t,:))- ...
-    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsSR_PRet(Window:t,:));
+SR_Overall_MVSR = sqrt(12)*((mean(Overlap_tsSR_PRet(Window:t,:))- ...
+    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsSR_PRet(Window:t,:)));
 % ### 3. Balanced Fund Buy-Hold ###
-SR_Overall_BH = (mean(Overlap_tsBH_PRet(Window:t,:))- ...
-    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsBH_PRet(Window:t,:));
+SR_Overall_BH = sqrt(12)*((mean(Overlap_tsBH_PRet(Window:t,:))- ...
+    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsBH_PRet(Window:t,:)));
 % ### 4. HRP ###
-SR_Overall_HRP = (mean(Overlap_tsHRP_PRet(Window:t,:))- ...
-    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsHRP_PRet(Window:t,:));
+SR_Overall_HRP = sqrt(12)*((mean(Overlap_tsHRP_PRet(Window:t,:))- ...
+    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsHRP_PRet(Window:t,:)));
 % ### 5. Balanced Fund Constant Mix (CM) ###
-SR_Overall_CM = (mean(Overlap_tsCM_PRet(Window:t,:))- ...
-    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsCM_PRet(Window:t,:));
+SR_Overall_CM = sqrt(12)*((mean(Overlap_tsCM_PRet(Window:t,:))- ...
+    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsCM_PRet(Window:t,:)));
 % ### 6. ALSI - Equity Proxy ###
-SR_Overall_ALSI = (mean(Overlap_tsALSI_PRet)- ...
-    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsALSI_PRet);
+SR_Overall_ALSI = sqrt(12)*((mean(Overlap_tsALSI_PRet)- ...
+    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsALSI_PRet));
 % ### 7. ALBI - Bonds Proxy ###
-SR_Overall_ALBI = (mean(Overlap_tsALBI_PRet)- ...
-    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsALBI_PRet);
+SR_Overall_ALBI = sqrt(12)*((mean(Overlap_tsALBI_PRet)- ...
+    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsALBI_PRet));
 % ### 8. JIBA3M - Cash Proxy ###
-SR_Overall_Cash = (mean(Overlap_tsCash_PRet)- ...
-    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsCash_PRet);
+SR_Overall_Cash = sqrt(12)*((mean(Overlap_tsCash_PRet)- ...
+    mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsCash_PRet));
 
 %% 7. Portfolio PERFORMANCE: %%%%%%%%%%%
 %  1. Calculate Geometrically Compounded Returns
 %  2. Trim and store in cell array
 % Preallocate for 8 variables (EW, SR, BH, HRP, CM, ALSI, ALBI, Cash)
-Realised_tsPIndx = cell(1,8);
+Realised_tsPIndx = cell(2,8);
+Realised_tsPIndx(1,:) = portfolio_names;
 
 % Define the list of port types and their corresponding names
 variables = {
@@ -210,26 +219,47 @@ for i = 1:length(variables)
     PIndx = cumprod(decimal_ret);
 
     % Store the results in the cell array
-    Realised_tsPIndx{i} = PIndx;
+    Realised_tsPIndx{2,i} = PIndx;
 end
 
 
 %% 8. Create Timetable object to store cummulative returns in %%%%%%%%%%%
 Rolling_portfolioSet = timetable(returns_data.Time(Window:t,:), ...
-    Realised_tsPIndx{1}(Window:t,:), ...
-    Realised_tsPIndx{2}(Window:t,:), ...
-    Realised_tsPIndx{3}(Window:t,:), ...
-    Realised_tsPIndx{4}(Window:t,:), ...
-    Realised_tsPIndx{5}(Window:t,:), ...
+    Realised_tsPIndx{2,1}(Window:t,:), ...
+    Realised_tsPIndx{2,2}(Window:t,:), ...
+    Realised_tsPIndx{2,3}(Window:t,:), ...
+    Realised_tsPIndx{2,4}(Window:t,:), ...
+    Realised_tsPIndx{2,5}(Window:t,:), ...
+    'VariableNames',{'EW (CM)', ...
+    'MVSR max', ...
+    'BalFund (BH)', ...
+    'HRP', ...
+    'BalFund (CM)'});
+%%% Adding in the additional benchmark series
+Rolling_portfolioSet=[Rolling_portfolioSet timetable(returns_data.Time(Window:t,:), ...
+    Realised_tsPIndx{2,6},Realised_tsPIndx{2,7}, ...
+    Realised_tsPIndx{2,8} , ...
+    'VariableNames',{'ALSI', ...
+    'ALBI', ...
+    'Cash'})];
+
+
+%% 9. Create Timetable with SRs to store cummulative returns in %%%%%%%%%%%
+Rolling_portfolioSet_SR = timetable(returns_data.Time(Window:t,:), ...
+    Realised_tsPIndx{2,1}(Window:t,:), ...
+    Realised_tsPIndx{2,2}(Window:t,:), ...
+    Realised_tsPIndx{2,3}(Window:t,:), ...
+    Realised_tsPIndx{2,4}(Window:t,:), ...
+    Realised_tsPIndx{2,5}(Window:t,:), ...
     'VariableNames',{['EW (CM)  (SR = ' num2str(round(SR_Overall_EW,2)) ')'], ...
     ['MVSR max  (SR = ' num2str(round(SR_Overall_MVSR,2)) ')'], ...
     ['BalFund (BH)   (SR = ' num2str(round(SR_Overall_BH,2)) ')'], ...
     ['HRP   (SR = ' num2str(round(SR_Overall_HRP,2)) ')'], ...
     ['BalFund (CM)    (SR = ' num2str(round(SR_Overall_CM,2)) ')']});
 %%% Adding in the additional benchmark series
-Rolling_portfolioSet=[Rolling_portfolioSet timetable(returns_data.Time(Window:t,:), ...
-    Realised_tsPIndx{6},Realised_tsPIndx{7}, ...
-    Realised_tsPIndx{8} , ...
+Rolling_portfolioSet_SR=[Rolling_portfolioSet_SR timetable(returns_data.Time(Window:t,:), ...
+    Realised_tsPIndx{2,6},Realised_tsPIndx{2,7}, ...
+    Realised_tsPIndx{2,8} , ...
     'VariableNames',{['ALSI  (SR = ' num2str(round(SR_Overall_ALSI,2)) ')'], ...
     ['ALBI  (SR = ' num2str(round(SR_Overall_ALBI,2)) ')'], ...
     ['Cash (JIBA3M)  (SR = ' num2str(round(SR_Overall_Cash,2)) ')']})];

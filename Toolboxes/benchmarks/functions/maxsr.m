@@ -1,8 +1,10 @@
 function [SR_opt_wts,MV_SR_sdv, MV_SR_return,frontier_rsk_vec, frontier_return_vec] = maxsr(AssetList,AssetMean,AssetCovar, Rfr)
 % Using MV asset allocation
 
-% Mean-Variance Opimation with a Maximum Sharpe Ratio objective function
-% for portfolio weights allocation.
+% Mean-Variance Optimisation with a Maximum Sharpe Ratio objective function
+% for portfolio weights allocation. Portfolio constraints use are that
+% the portfolio is fully-invested long-only portfolios i.e.
+% (nonnegative weights that sum to 1).
 
 % INPUTS:
 % AssetReturns: object consisting of J assets and their returns 
