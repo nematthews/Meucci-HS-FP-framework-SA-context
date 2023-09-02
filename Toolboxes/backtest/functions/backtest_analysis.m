@@ -1,4 +1,4 @@
-function [Rolling_portfolioSet,Realised_tsPIndx,Realised_tsPRet,Opt_tsWts,t,hsfp_Prs] = backtest_analysis(backtest_object,Window,Rfr)
+function [Rolling_portfolioSet,Realised_tsPIndx,Realised_tsPRet,Opt_tsWts,cov_con_n,t,hsfp_Prs] = backtest_analysis(backtest_object,Window,reg_lambda)
 
 % NOTE: This function is very use specific to this project. It was created
 % to streamline the project code therefore does not generalise well.
@@ -12,13 +12,12 @@ function [Rolling_portfolioSet,Realised_tsPIndx,Realised_tsPRet,Opt_tsWts,t,hsfp
 % Window - window length using the same sample frequency as returns data
 % (Type: scalar)
 
-% Rfr - Risk free rate used for sharpe ratio optimisation usually the
-% mean() of a cash asset calculated at the same frequency as returns.
-% (Type: scalar)
+% reg_lambda - regularisation parameter used to decrease noise within the
+% covaraince matrix by means of adding a penalty term to the matrx. 
+% (Type: double)
 
-% p_type - Method to apply with calculating HSFP flexible probabilities.
-% (Type: char|str )
-% NOTE: if p_type = 'rolling_w' ensure w_len < Window.
+
+% NB NOTE: if backtest_object.method = 'rolling_w' ensure w_len < Window.
 
 %% 1. Set up storage and initialise weights for Backtest %%%%%%%%%%%
 portfolio_names = {'EW (CM)', 'MVSR max', 'BalFund (BH)', 'HRP', ...
@@ -31,13 +30,15 @@ tickersToExtract = {'JALSHTR_Index', 'Cash','ALB_Index'};
 BF_BH_TT = returns_data(:, tickersToExtract);
 returns_data = removevars(returns_data,'JALSHTR_Index');
 
-%###### initialize storage and inputs:
+%###### initialize inputs:
 [m,n]=size(returns_data); % size of full data set
 % Window = 36;
 AssetList = returns_data.Properties.VariableNames;
 % Rfr = mean(returns_data.JIBA3M_Index);
-%###### initialize storage and inputs:
 
+%###### initialize storage:
+% ### 0. covariance condition numbers
+cov_con_n = zeros(m,1);
 % ### 1. Equally Weighted (EW)###
 Overlap_tsEW_Wts0 = eqweight(returns_data);
 Overlap_tsEW_Wts = zeros(m,n);
@@ -83,6 +84,20 @@ for t=Window:m-1
         % Need to calc pr for each window (but type stays the same)
         [m_t, cov_t,hsfp_Prs] = backtest_moments(backtest_object,Window,t);
     end
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Regularization parameter (lambda)
+    % If reg_lambda is specified regularise cov matrix else skip:
+    if nargin > 2 
+    % Identity matrix of the same size as Cov
+    n = size(cov_t,1);  % Assuming S is a square matrix
+    I = eye(n);
+    % Compute the regularized covariance matrix (R)
+    cov_t = cov_t + reg_lambda * I;
+    end
+
+    % Checking condition number of cov at each t:
+    cov_con_n(t,:) = cond(cov_t);
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %%%%% WEIGHTINGS %%%%%%
@@ -139,7 +154,11 @@ Overlap_tsCash_PRet = table2array(returns_data(Window:t, 'Cash'));
 Overlap_tsCash_PRet(1, :) = 0;
 
 
-%% 4. Package WEIGHTS for OUTPUT:
+%% 4. TRIM CONDITION NUMBERS:
+% Trim resulting to window
+cov_con_n = cov_con_n(Window:t,:);
+
+%% 5. Package WEIGHTS for OUTPUT:
 % Trim resulting to window & store in cell array %%%%%%%%%%%
 % NOTE: each set of optimal weights have x number of columns based on numb
 % assets. eg SR has 6 but BF have 3.
@@ -156,7 +175,7 @@ Opt_tsWts{2,3} = Overlap_tsBH_Wts0(Window:t,:);
 Opt_tsWts{2,4} = Overlap_tsHRP_Wts(Window:t,:);
 Opt_tsWts{2,5} = Overlap_tsCM_Wts(Window:t,:);
 
-%% 5. Package RETURNS for OUTPUT:
+%% 6. Package RETURNS for OUTPUT:
 % Trim resulting to window & store in cell array %%%%%%%%%%%
 % Initialize the cell array
 Realised_tsPRet = cell(2, 8);
@@ -174,7 +193,7 @@ Realised_tsPRet{2,7} = Overlap_tsALBI_PRet;
 Realised_tsPRet{2,8} = Overlap_tsCash_PRet;
 
 
-%% 6. Backtest Portfolio SHARPE RATIOS %%%%%%%%%%%
+%% 7. Backtest Portfolio SHARPE RATIOS %%%%%%%%%%%
 % ### 1. Equally Weighted (EW)###
 SR_Overall_EW = sqrt(12)*((mean(Overlap_tsEW_PRet(Window:t,:))- ...
     mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsEW_PRet(Window:t,:)));
@@ -200,7 +219,7 @@ SR_Overall_ALBI = sqrt(12)*((mean(Overlap_tsALBI_PRet)- ...
 SR_Overall_Cash = sqrt(12)*((mean(Overlap_tsCash_PRet)- ...
     mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsCash_PRet));
 
-%% 7. Portfolio PERFORMANCE: %%%%%%%%%%%
+%% 8. Portfolio PERFORMANCE: %%%%%%%%%%%
 %  1. Calculate Geometrically Compounded Returns
 %  2. Trim and store in cell array
 % Preallocate for 8 variables (EW, SR, BH, HRP, CM, ALSI, ALBI, Cash)
@@ -223,7 +242,7 @@ for i = 1:length(variables)
 end
 
 
-%% 8. Create Timetable object to store cummulative returns in %%%%%%%%%%%
+%% 9. Create Timetable object to store cummulative returns in %%%%%%%%%%%
 Rolling_portfolioSet = timetable(returns_data.Time(Window:t,:), ...
     Realised_tsPIndx{2,1}(Window:t,:), ...
     Realised_tsPIndx{2,2}(Window:t,:), ...
@@ -244,7 +263,7 @@ Rolling_portfolioSet=[Rolling_portfolioSet timetable(returns_data.Time(Window:t,
     'Cash'})];
 
 
-%% 9. Create Timetable with SRs to store cummulative returns in %%%%%%%%%%%
+%% 10. Create Timetable with SRs to store cummulative returns in %%%%%%%%%%%
 Rolling_portfolioSet_SR = timetable(returns_data.Time(Window:t,:), ...
     Realised_tsPIndx{2,1}(Window:t,:), ...
     Realised_tsPIndx{2,2}(Window:t,:), ...
