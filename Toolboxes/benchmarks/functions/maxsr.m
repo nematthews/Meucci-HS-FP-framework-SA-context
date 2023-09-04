@@ -1,4 +1,4 @@
-function [SR_opt_wts,MV_SR_sdv, MV_SR_return,frontier_rsk_vec, frontier_return_vec] = maxsr(AssetList,AssetMean,AssetCovar, Rfr)
+function [SR_opt_wts,MV_SR_sdv, MV_SR_return,frontier_rsk_vec, frontier_return_vec] = maxsr(AssetList,AssetMean,AssetCovar, Rfr,Wts_lb,Wts_up)
 % Using MV asset allocation
 
 % Mean-Variance Optimisation with a Maximum Sharpe Ratio objective function
@@ -17,15 +17,15 @@ function [SR_opt_wts,MV_SR_sdv, MV_SR_return,frontier_rsk_vec, frontier_return_v
 %% Set up portfolio object
 p = Portfolio('AssetList', AssetList, 'RiskFreeRate', Rfr);
 p = setAssetMoments(p, AssetMean, AssetCovar);
-% Set initial weights as 1/N portfolio
-% p = setInitPort(p, 1/p.NumAssets);
-% Estimated risk & return using EW port
-% [EW_rsk, EW_ret] = estimatePortMoments(p, p.InitPort);
+p = setDefaultConstraints(p);
 
+%% Set Weight Bounds (5 assets)
+Wts_lb = [ 0 0 0 0 0 ]; 
+Wts_up = [ 1 1 1 1 0.05];
+p = setBounds(p, Wts_lb, Wts_up);
 %% Set Efficient Frontier
 % Set up portfolio constraints for fully-invested long-only portfolios
 % (nonnegative weights that sum to 1)
-p = setDefaultConstraints(p);
 % Construct EFrontier
 pwgt = estimateFrontier(p, 20);
 % Vector of Risk & return across frontier
