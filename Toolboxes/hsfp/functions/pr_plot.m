@@ -6,6 +6,10 @@ function fig = pr_plot(x, y, title_text)
 % y - array of Prs of equal length to height(x)
 % title_text is a string object
 
+% Author: Nina Matthews (2023)
+
+% $Revision: 1.2 $ $Date: 2023/02/20 16:10:46 $ $Author: Nina Matthews $
+
 %%
 % check if title is provided
 if nargin < 3 || isempty(title_text)

@@ -1,9 +1,13 @@
 function new_weights = eqweight(asset_ob)
 % Equal-weighted portfolio allocation based on number of assets in returns
-
+%
 % INPUTS:
 % asset_ob: object consisting of multiple assets and returns over a period
 % Type: timetable or array/matrix
+
+% Author: Nina Matthews (2023)
+
+% $Revision: 1.1 $ $Date: 2023/05/09 19:09:01 $ $Author: Nina Matthews $
 
 %%
 % If asset_ob is a timetable: Number of assets

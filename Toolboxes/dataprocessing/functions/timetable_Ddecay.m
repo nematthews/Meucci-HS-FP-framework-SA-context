@@ -8,14 +8,18 @@ function [SIG_SMOOTHED_TT, test_z, test_mu] = timetable_Ddecay(data_TT, tau_f, t
 % of information for the smoothing. Variables of different lengths are
 % synchronised at the end and will retain the initial time range of
 % 'data_TT'.
-
-% INPUTS:
+%
+%% INPUTS:
 % data = unscaled state variables data e.g. Volatility index, inflation etc.
 % (type: timetable)
 % tau_f = fast half-life at which decay volatilities
 % (type: double)
 % tau_s = slow half-life at which decay correlations
 % (type: double)
+
+% Author: Nina Matthews (2023)
+
+% $Revision: 1.4 $ $Date: 2023/05/05 11:01:45 $ $Author: Nina Matthews $
 
 %%
 % Get the variable names from the timetable

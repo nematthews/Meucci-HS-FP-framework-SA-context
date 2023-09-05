@@ -2,29 +2,34 @@
 function [p_post, DLagrang] = min_relative_entropy(prior, inequalityMatrix, inequalityVector, equalityMatrix, equalityVector, options)
 % Calculates posterior probabilites from a supplied prior using the dual
 % Lagrangian multiplier and the Hessian. 
-
-% INPUTS: 
+%
+%% INPUTS: 
 % prior - desired prior probability distribution (usually exp smoothed Prs)
 % (Type: array double, [1 x T])
-
+%
 % inequalityMatrix - matrix defining inequality views 
 % Here for z^2
 % (Type: matrix double, [1 x T])
-
+%
 % inequalityVector - vector for the defined inequality views 
 % Here: (cr_mu^2)+cr_variance
 % (Type: double) 
-
+%
 % equalityMatrix - equality constrains
 % Here: % Pr sum to 1
 % (Type: matrix, [number of EConstraints x T])
-
+%
 % equalityVector - equality views 
 % Here: Constrain the 1st moments
 % (Type: array double, [number of EConstraints x 1])
-
+%
 % options : options that can be specified for optimization
 % Note: specify using "optimoptions"
+
+
+% Author: Nina Matthews (2023)
+
+% $Revision: 1.2 $ $Date: 2023/02/20 16:10:46 $ $Author: Nina Matthews $
 
 
 numVariables = size(inequalityMatrix, 1);

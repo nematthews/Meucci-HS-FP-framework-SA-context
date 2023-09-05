@@ -3,19 +3,24 @@ function [p_cr, z_ub, z_lb, z_max,z_min] = cr_probs(signal_series, alpha, z_targ
 % the HS-FP framework.
 % Optimal Prs are set to 1 if z_t falls within the bandwidth range around
 % the selected target value.
-
-% INPUT:
+%
+%% INPUT:
 % signal_series - smoothed & standardised timeseries for a single state var
 % (type: array double, [T x 1])
-
+%
 % alpha - range of probability for bandwidth
 % (type: double)
-
+%
 % z_target - target value specific to the signal_series
 %          - Options: scalar value chosen by user
 %                     'latest'  give latest value in signal_series
 %                     'mean' gives average across singal series
 % (type: double| str| char)
+
+% Author: Nina Matthews (2023)
+
+% $Revision: 1.2 $ $Date: 2023/02/20 16:10:46 $ $Author: Nina Matthews $
+
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%

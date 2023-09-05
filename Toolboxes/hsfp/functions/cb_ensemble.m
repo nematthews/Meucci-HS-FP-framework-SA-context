@@ -3,32 +3,38 @@ function [cb_ensemble, wts,ens_vals] = cb_ensemble(signal_TT, alpha, tau_prior, 
 % flexible probabilities (also referred to as Degree of Conditioning & 
 % Correlation (DCC) Flex Prs) via entropy pooling given Q conditioning 
 % variables (signals).
-
+%
 %%% NOTE: z_target default for signal q is set as most recent obs of q.
 % Code can later be updated to accommodate user defined targets per signal.
 % Currently only 'mean' or 'latest' can be specified as method of selecting
 % the target.
-
-% INPUTS:
+%
+%% INPUTS:
 % singal_TT - time series of conditioning variables acting as state signals
 % (Type: Timetable, [T x Q])
-
+%
 % alpha - range of probability for bandwidth
 % (type: double)
-
+%
 % prior - desired prior probability distribution (usually exp smoothed Prs)
 % (type: array double [T x 1])
-
+%
 % z_target - defines how target value should be selected
 % Options: 'latest' - most recent observation of sig at time T (Default).
 %          'mean' - average over time T for each sig.         
 % (Type: str|char)     
 % NOTE: unlike other Fns, here a scalar will not be accepted as z_target
-
+%
 % w_method - defines how the final weighted average is calculated 
 % Options: 'log-linear' - log-linear weighted average (Default)
 %          'simple' - simple weighted average        
 % (Type: str|char)
+
+
+% Author: Nina Matthews (2023)
+
+% $Revision: 1.5 $ $Date: 2023/05/20 16:43:06 $ $Author: Nina Matthews $
+
 
 %% check inputs
 

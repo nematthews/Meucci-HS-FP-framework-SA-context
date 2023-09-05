@@ -1,12 +1,16 @@
 function ticker_timetable = importfields2keep(fields,fileName)
 % Loops through sheets of excel doc, where each sheet stores
 % individual ticker data to import selected fields from all sheets
-
-% INPUTS:
+%
+%% INPUTS:
 % fields = required fields to store eg. 'PX_LAST' or 'CHG_PCT_1M'
 % (type: cell array)
 % fileName = file and its directory path
 % (type: string)
+
+% Author: Nina Matthews (2023)
+
+% $Revision: 1.2 $ $Date: 2023/05/04 13:11:05 $ $Author: Nina Matthews $
 
 %% 
 % define columns to keep from each sheet

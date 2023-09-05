@@ -5,14 +5,18 @@ function z = expDdecay(data, tau_f, tau_s)
 % purposes.
 % NOTE: can be used in an external 'for' loop of the columns of a timetable
 % to smooth all columns.
-
-% INPUTS:
+%
+%% INPUTS:
 % data = unscaled state varaible data eg. Volitility index, inflation etc.
 % (type: double)
 % tau_f = fast half-life at which decay volatilities
 % (type: double)
 % tau_s = slow half-life at which decay correlations
 % (type: double)
+
+% Author: Nina Matthews (2023)
+
+% $Revision: 1.4 $ $Date: 2023/05/05 11:01:45 $ $Author: Nina Matthews $
 
 %% 
 T = length(data);

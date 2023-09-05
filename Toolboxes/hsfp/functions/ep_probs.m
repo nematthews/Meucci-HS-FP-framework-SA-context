@@ -1,31 +1,35 @@
 function [post_pr] = ep_probs(signal_series, alpha, tau_prior,z_target)
 % Flexible probabilities conditioned via entropy pooling
-
+%
 % Allows for Time & State conditioning of FPs by begining
 % with an exponential decay prior and uses the Crisp Prs & its moments to
 % for condition. Due to the Entropy pooling we have a resulting mixture
 % of the kernel approach and the exponential decay that can
 % switch between Gaussian kernel and exponential kernel.
-
+%
 % Calls on min_relative_entropy.m to calculate the posterior probabilites
 % when the Crisp Moments are inputs as the desired constraints.
-
-% INPUT:
+%
+%% INPUT:
 % singnal_series - smoothed & standardised timeseries for a single state var
 % (type: array double, [T x 1])
-
+%
 % alpha - range of probability for bandwidth
 % (type: double)
-
+%
 % tau_prior - tau of desired prior probability distribution (exp smoothed Prs)
 % (type: double)
-
+%
 % z_target - target value specific to the signal_series
 %          - Options: scalar value chosen by user
 %                     'latest'  give latest value in signal_series
 %                     'mean' gives average across singal series
 % (type: double| str| char)
 
+
+% Author: Nina Matthews (2023)
+
+% $Revision: 1.2 $ $Date: 2023/02/20 16:10:46 $ $Author: Nina Matthews $
 
 if isa(signal_series,'timetable')
     signal_series = table2array(signal_series);

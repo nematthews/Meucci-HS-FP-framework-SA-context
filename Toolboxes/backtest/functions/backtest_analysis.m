@@ -4,28 +4,76 @@ function [Rolling_portfolioSet,Realised_tsPIndx,Realised_tsPRet,Opt_tsWts,cov_co
 % to streamline the project code therefore does not generalise well.
 % Function can also be made more streamline but currently coded in a
 % practical quick manner.
-
-%% INPUTS:
-% returns_data - historical returns data for J assets
+%
+%% Primary INPUT:
+%% backtest_object - contains all data needed to calculate mu & sigma given
+% a selected method.
+% (Type: 1x1 struct with 6 fields)
+%
+% backtest_object = struct('returns',[],'Wts_lb',[],'Wts_ub',[],'signals',[],'method',[], 'parameters',[]);
+%
+% 1. backtest_object.returns - historical returns data for J assets
 % (Type: TimeTable [T x J])
-
+%
+% 2. backtest_object.Wts_lb - vector of lower bounds for the asset weights 
+% in the portfolios. (Auxiliary (used elsewhere in backtest_analysis.m))
+% (Type: double [1 x J])
+%
+% 3. backtest_object.Wts_ub - vector of upper bounds for the asset weights
+% in the portfolios. (Auxiliary (used elsewhere in backtest_analysis.m))
+% (Type: double [1 x J])
+%
+% 4. backtest_object.signals - time series of Q state signals.
+% (Type: Timetable, [T x Q])
+%
+% 5. backtest_object.method - Method to calculate HSFP flexible probabilities.
+% (Type: char|str )
+% Options:   - none (default) NOTE: this is not defined below as it is
+%                                   only used in backtest fn to rather use 
+%                                   normal mean and cov. 
+%            - rolling_w
+%            - exp_decay
+%            - crisp
+%            - kernel
+%            - e_pooling
+%            - ew_ensemble
+%            - cb_ensemble
+%
+% 6. backtest_object.parameters - contains fields for any parameters needed
+% to calculate FProbs given an method that is selected.
+% (Type: 1x1 struct with 8 fields)
+% hsfp_parameters = struct('window',[],'tau',[],'alpha',[],'z_target',[],
+% 'gamma',[],'h',[], 'tau_prior',[],'ensemble_wt_method',[]);
+%
+%% Additional INPUTS 
 % Window - window length using the same sample frequency as returns data
 % (Type: scalar)
-
+%
 % reg_lambda - regularisation parameter used to decrease noise within the
 % covaraince matrix by means of adding a penalty term to the matrx. 
 % (Type: double)
-
-
-% Wts_lb - vector of lower bounds for the asset weights in the portfolios
-% (Type: double [1 x J])
-
-
-% Wts_up - vector of upper bounds for the asset weights in the portfolios
-% (Type: double [1 x J])
-
-
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Example: backtest_object expected  (this case window needed for rolling_w)
+% hsfp_parameters = struct('window',[],'tau',[],'alpha',[],'z_target',[],
+% 'gamma',[],'h',[], 'tau_prior',[],'ensemble_wt_method',[]);
+% hsfp_parameters.window = Window_len (NOTE: cannot exceed Window length
+% specified in backtest_analysis.m Fn.)
+% backtest_object = struct('returns',[],'Wts_lb',[],'Wts_ub',[],'signals',
+% [],'method',[], 'parameters',[]);
+% backtest_object.returns = returns_TT;
+% backtest_object.Wts_lb = [ 0 0 0 0 0 ]; 
+% backtest_object.Wts_up = [ 1 1 1 1 0.05];
+% backtest_object.signals = SIG_SMOOTHED_TT(:,'lagged_SACPIYOY_Index'); % NB: needs to be a timetable object
+% backtest_object.method = 'rolling_w';
+% backtest_object.parameters = hsfp_parameters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % NB NOTE: if backtest_object.method = 'rolling_w' ensure w_len < Window.
+
+% Author: Nina Matthews (2023)
+
+% $Revision: 1.1 $ $Date: 2023/05/09 19:09:01 $ $Author: Nina Matthews $
+
 
 %% 1. Set up storage and initialise weights for Backtest %%%%%%%%%%%
 portfolio_names = {'EW (CM)', 'MVSR max', 'BalFund (BH)', 'HRP', ...
