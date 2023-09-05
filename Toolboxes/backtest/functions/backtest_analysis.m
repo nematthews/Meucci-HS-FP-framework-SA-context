@@ -63,7 +63,7 @@ function [Rolling_portfolioSet,Realised_tsPIndx,Realised_tsPRet,Opt_tsWts,cov_co
 % [],'method',[], 'parameters',[]);
 % backtest_object.returns = returns_TT;
 % backtest_object.Wts_lb = [ 0 0 0 0 0 ]; 
-% backtest_object.Wts_up = [ 1 1 1 1 0.05];
+% backtest_object.Wts_ub = [ 1 1 1 1 0.05];
 % backtest_object.signals = SIG_SMOOTHED_TT(:,'lagged_SACPIYOY_Index'); % NB: needs to be a timetable object
 % backtest_object.method = 'rolling_w';
 % backtest_object.parameters = hsfp_parameters
@@ -122,8 +122,8 @@ if isempty(backtest_object.Wts_lb)
     backtest_object.Wts_lb = zeros(1,n);
 end
 
-if isempty(backtest_object.Wts_lb) 
-    backtest_object.Wts_up = ones(1,n);
+if isempty(backtest_object.Wts_ub) 
+    backtest_object.Wts_ub = ones(1,n);
 end
 
 %% 2. Begin backtest window shifts %%%%%%%%%%%
@@ -171,7 +171,7 @@ for t=Window:m-1
     % 2. SR
     % initialise wts as equally weighted
     %     Overlap_tsSR_Wts(t,:) = maxsr(AssetList, m_t,cov_t, returns_data.Cash(t));
-    Overlap_tsSR_Wts(t,:) = maxsr(AssetList, m_t,cov_t, returns_data.Cash(t-1,:),backtest_object.Wts_lb,backtest_object.Wts_up);
+    Overlap_tsSR_Wts(t,:) = maxsr(AssetList, m_t,cov_t, returns_data.Cash(t-1,:),backtest_object.Wts_lb,backtest_object.Wts_ub);
 
     % 3. Balanced BH
     % initialise wts as equally weighted

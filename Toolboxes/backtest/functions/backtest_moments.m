@@ -58,7 +58,7 @@ function [hsfp_mu, hsfp_cov,p] = backtest_moments(backtest_object)
 % [],'method',[], 'parameters',[]);
 % backtest_object.returns = returns_TT;
 % backtest_object.Wts_lb = [ 0 0 0 0 0 ]; 
-% backtest_object.Wts_up = [ 1 1 1 1 0.05];
+% backtest_object.Wts_ub = [ 1 1 1 1 0.05];
 % backtest_object.signals = SIG_SMOOTHED_TT(:,'lagged_SACPIYOY_Index'); % NB: needs to be a timetable object
 % backtest_object.method = 'rolling_w';
 % backtest_object.parameters = hsfp_parameters
