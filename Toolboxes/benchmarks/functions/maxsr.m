@@ -20,9 +20,9 @@ p = setAssetMoments(p, AssetMean, AssetCovar);
 p = setDefaultConstraints(p);
 
 %% Set Weight Bounds (5 assets)
-Wts_lb = [ 0 0 0 0 0 ]; 
-Wts_up = [ 1 1 1 1 0.05];
-p = setBounds(p, Wts_lb, Wts_up);
+if nargin > 4
+    p = setBounds(p, Wts_lb, Wts_up);
+end
 %% Set Efficient Frontier
 % Set up portfolio constraints for fully-invested long-only portfolios
 % (nonnegative weights that sum to 1)

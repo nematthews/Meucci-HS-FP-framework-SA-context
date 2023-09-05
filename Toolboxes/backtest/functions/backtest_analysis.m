@@ -17,6 +17,14 @@ function [Rolling_portfolioSet,Realised_tsPIndx,Realised_tsPRet,Opt_tsWts,cov_co
 % (Type: double)
 
 
+% Wts_lb - vector of lower bounds for the asset weights in the portfolios
+% (Type: double [1 x J])
+
+
+% Wts_up - vector of upper bounds for the asset weights in the portfolios
+% (Type: double [1 x J])
+
+
 % NB NOTE: if backtest_object.method = 'rolling_w' ensure w_len < Window.
 
 %% 1. Set up storage and initialise weights for Backtest %%%%%%%%%%%
@@ -61,7 +69,14 @@ Overlap_tsCM_Wts0 = [0.60,0.05,0.35]; % [equity, cash, bonds] - balanced fund 60
 Overlap_tsCM_Wts = zeros(m,3);
 Overlap_tsCM_PRet = zeros(m,1);
 
-%% Use backtest objects for backtest moment calculations
+%% Set weight constraints for asset classes
+if isempty(backtest_object.Wts_lb) 
+    backtest_object.Wts_lb = zeros(1,n);
+end
+
+if isempty(backtest_object.Wts_lb) 
+    backtest_object.Wts_up = ones(1,n);
+end
 
 %% 2. Begin backtest window shifts %%%%%%%%%%%
 for t=Window:m-1
@@ -82,7 +97,7 @@ for t=Window:m-1
         backtest_object.returns = returns_data(1+t-Window:t-1, :);
         backtest_object.signals = signals_data(1+t-Window:t-1, :);
         % Need to calc pr for each window (but type stays the same)
-        [m_t, cov_t,hsfp_Prs] = backtest_moments(backtest_object,Window,t);
+        [m_t, cov_t,hsfp_Prs] = backtest_moments(backtest_object);
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -108,7 +123,7 @@ for t=Window:m-1
     % 2. SR
     % initialise wts as equally weighted
     %     Overlap_tsSR_Wts(t,:) = maxsr(AssetList, m_t,cov_t, returns_data.Cash(t));
-    Overlap_tsSR_Wts(t,:) = maxsr(AssetList, m_t,cov_t, returns_data.Cash(t-1,:));
+    Overlap_tsSR_Wts(t,:) = maxsr(AssetList, m_t,cov_t, returns_data.Cash(t-1,:),backtest_object.Wts_lb,backtest_object.Wts_up);
 
     % 3. Balanced BH
     % initialise wts as equally weighted

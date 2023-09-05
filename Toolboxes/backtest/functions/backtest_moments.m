@@ -1,11 +1,11 @@
-function [hsfp_mu, hsfp_cov,p] = backtest_moments(backtest_object,Window,t)
+function [hsfp_mu, hsfp_cov,p] = backtest_moments(backtest_object)
 
 % NOTE: This function is very use specific to this project. It was created
 % to streamline the project code therefore does not generalise well.
 
 %% INPUTS:
 
-% backtest_object - contains all data needed to calculate mu & sigma given
+%% backtest_object - contains all data needed to calculate mu & sigma given
 % a selected method.
 % (Type: 1x1 struct with 4 fields)
 % backtest_object = struct('returns',[],'signals',[],'method',[], 'parameters',[]);
@@ -13,10 +13,18 @@ function [hsfp_mu, hsfp_cov,p] = backtest_moments(backtest_object,Window,t)
 % 1. backtest_object.returns - historical returns data for J assets
 % (Type: TimeTable [T x J])
 
-% 2. backtest_object.signals - time series of Q state signals.
+% 2. backtest_object.Wts_lb - vector of lower bounds for the asset weights 
+% in the portfolios. (Auxiliary (used elsewhere in backtest_analysis.m))
+% (Type: double [1 x J])
+
+% 3. backtest_object.Wts_ub - vector of upper bounds for the asset weights
+% in the portfolios. (Auxiliary (used elsewhere in backtest_analysis.m))
+% (Type: double [1 x J])
+
+% 4. backtest_object.signals - time series of Q state signals.
 % (Type: Timetable, [T x Q])
 
-% 3. backtest_object.method - Method to calculate HSFP flexible probabilities.
+% 5. backtest_object.method - Method to calculate HSFP flexible probabilities.
 % (Type: char|str )
 % Options:   - none (default) NOTE: this is not defined below as it is
 %                                   only used in backtest fn to rather use 
@@ -34,6 +42,10 @@ function [hsfp_mu, hsfp_cov,p] = backtest_moments(backtest_object,Window,t)
 % (Type: 1x1 struct with 9 fields)
 % hsfp_parameters = struct('window',[],'tau',[],'alpha',[],'z_target',[],
 % 'gamma',[],'h',[], 'tau_prior',[],'ensemble_wt_method',[]);
+
+%% Auxiliary INPUTS (used elsewhere in backtest_analysis.m):
+% Window - window length using the same sample frequency as returns data
+% (Type: scalar)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Example: backtest_object expected  (this case window needed for rolling_w)
