@@ -24,6 +24,10 @@ function [p_cr, z_ub, z_lb, z_max,z_min] = cr_probs(signal_series, alpha, z_targ
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%
+if istimetable(signal_series)
+    signal_series = table2array(signal_series);
+end
+
 if strcmp(z_target, 'mean')
         z_target = mean(signal_series);
 

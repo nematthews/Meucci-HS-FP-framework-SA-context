@@ -29,6 +29,10 @@ function p_knl = kl_probs(signal_series, h, gamma, z_target)
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%
+if istimetable(signal_series)
+    signal_series = table2array(signal_series);
+end
+
 if strcmp(z_target, 'mean')
     z_target = mean(signal_series);
 

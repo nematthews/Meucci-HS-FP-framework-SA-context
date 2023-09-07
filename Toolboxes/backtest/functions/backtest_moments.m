@@ -30,7 +30,7 @@ function [hsfp_mu, hsfp_cov,p] = backtest_moments(backtest_object)
 % Options:   - none (default) NOTE: this is not defined below as it is
 %                                   only used in backtest fn to rather use 
 %                                   normal mean and cov. 
-%            - rolling_w
+%            - rolling_w 
 %            - exp_decay
 %            - crisp
 %            - kernel
@@ -63,6 +63,15 @@ function [hsfp_mu, hsfp_cov,p] = backtest_moments(backtest_object)
 % backtest_object.method = 'rolling_w';
 % backtest_object.parameters = hsfp_parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Required parameters per method:
+%            - rolling_w    (window)
+%            - exp_decay    (tau)
+%            - crisp        (alpha, z_target)
+%            - kernel       (h, gamma, z_target)
+%            - e_pooling    (alpha, tau_prior, z_target)
+%            - ew_ensemble  (alpha, tau_prior, z_target)
+%            - cb_ensemble  (alpha, tau_prior, z_target,ensemble_wt_method)
+
 
 % Author: Nina Matthews (2023)
 
