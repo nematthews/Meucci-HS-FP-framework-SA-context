@@ -95,6 +95,9 @@ AssetList = returns_data.Properties.VariableNames;
 %###### initialize storage:
 % ### 0. covariance condition numbers
 cov_con_n = zeros(m,1);
+% ### 0. SR excess return for each portfolio @ each t step (currently 5
+% portfolios)
+SR_dif_t = zeros(m,5);
 % ### 1. Equally Weighted (EW)###
 Overlap_tsEW_Wts0 = eqweight(returns_data);
 Overlap_tsEW_Wts = zeros(m,n);
@@ -184,20 +187,32 @@ for t=Window:m-1
     % 3. Rebalance weighs
     Overlap_tsCM_Wts(t,:) = Overlap_tsCM_Wts0; % Constant Mix (CM)
 
-    %%%%% PORT RETURNS %%%%%%
+    %%%%%%%%%%%% PORT RETURNS %%%%%%%%%%%%%
     % 1. EW
     Overlap_tsEW_PRet(t+1,:) = Overlap_tsEW_Wts(t,:) * transpose(returns_data{t+1,:});
+    % SR excess Ret
+    SR_dif_t(t+1,1) =  Overlap_tsEW_PRet(t+1,:) - returns_data.Cash(t+1,:);
+   
     % 2. SR
     Overlap_tsSR_PRet(t+1,:) =  Overlap_tsSR_Wts(t,:) * transpose(returns_data{t+1,:});
+    % SR excess Ret
+    SR_dif_t(t+1,2) =  Overlap_tsSR_PRet(t+1,:) - returns_data.Cash(t+1,:);
 
     % 3. Balanced BH
     Overlap_tsBH_PRet(t+1,:) = Overlap_tsBH_Wts0(t,:) * transpose(BF_BH_TT{t+1,:});
+    % SR excess Ret
+    SR_dif_t(t+1,3) =  Overlap_tsBH_PRet(t+1,:) - returns_data.Cash(t+1,:);
 
     % 4. HRP
     Overlap_tsHRP_PRet(t+1,:) = Overlap_tsHRP_Wts(t,:) * transpose(returns_data{t+1,:});
+    % SR excess Ret
+    SR_dif_t(t+1,4) =  Overlap_tsHRP_PRet(t+1,:) - returns_data.Cash(t+1,:);
 
     % 5. Balanced CM
     Overlap_tsCM_PRet(t+1,:) = Overlap_tsCM_Wts(t,:) * transpose(BF_BH_TT{t+1,:});
+    % SR excess Ret
+    SR_dif_t(t+1,5) =  Overlap_tsCM_PRet(t+1,:) - returns_data.Cash(t+1,:);
+
 
     %%%%% UPDATE BH %%%%%%%
     % Calc month end weight
@@ -256,11 +271,28 @@ Realised_tsPRet{2,7} = Overlap_tsALBI_PRet;
 Realised_tsPRet{2,8} = Overlap_tsCash_PRet;
 
 
+% %% Annualised geometric excess returns for SR
+
+% geo_SR = geo_sr(SR_dif_t, 'annualise');
+
+SR_dif_t = SR_dif_t(Window+1:t,:);
+% geo_SR_excessRet = zeros(1,width(SR_dif_t));
+% f = 12; % Number of periods within a year (e.g., 12 for monthly)
+% for port = 1:width(SR_dif_t)
+% 
+%     PRet = SR_dif_t(:,port);
+%     % Number of periods under analysis
+%     n = height(PRet);
+%     % Calculate the geometric mean return (in decimals)
+%     geo_SR_excessRet(port) = ((prod(1 + PRet))^ (f / n)) - 1;
+% end
+
 %% 7. Backtest Portfolio SHARPE RATIOS %%%%%%%%%%%
+% Calculste the SR differencial/excess retunr at each time step
 % ### 1. Equally Weighted (EW)###
 SR_Overall_EW = sqrt(12)*((mean(Overlap_tsEW_PRet(Window:t,:))- ...
     mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsEW_PRet(Window:t,:)));
-% ### 2. SR Maximizing ###
+% ### 2. SR Maximizing ### 
 SR_Overall_MVSR = sqrt(12)*((mean(Overlap_tsSR_PRet(Window:t,:))- ...
     mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsSR_PRet(Window:t,:)));
 % ### 3. Balanced Fund Buy-Hold ###
