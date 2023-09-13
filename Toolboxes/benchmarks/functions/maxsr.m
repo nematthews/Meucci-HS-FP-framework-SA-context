@@ -21,14 +21,14 @@ p = setAssetMoments(p, AssetMean, AssetCovar);
 p = setDefaultConstraints(p);
 
 %% Set Weight Bounds (5 assets)
-if nargin > 4
-    p = setBounds(p, Wts_lb, Wts_up);
-end
+% if nargin > 4
+%     p = setBounds(p, Wts_lb, Wts_up);
+% end
 %% Set Efficient Frontier
 % Set up portfolio constraints for fully-invested long-only portfolios
 % (nonnegative weights that sum to 1)
 % Construct EFrontier
-pwgt = estimateFrontier(p, 20);
+pwgt = estimateFrontier(p, 60);
 % Vector of Risk & return across frontier
 [frontier_rsk_vec, frontier_return_vec] = estimatePortMoments(p, pwgt);
 %% Optimize for Sharpe Ratio
