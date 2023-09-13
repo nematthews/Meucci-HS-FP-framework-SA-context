@@ -140,7 +140,7 @@ for t=Window:m-1
     % Sets 'none' as default if backtest_object.method is not defined
     if strcmp(backtest_object.method, 'none') || isempty(backtest_object.method)
         % Geometric Mean:
-        m_t = geo_ave(returns_data{1+t-Window:t-1,:},Window);
+        m_t = geo_ave(returns_data{1+t-Window:t-1,:});
         % Arithmetic Covariance:
         cov_t = cov(returns_data{1+t-Window:t-1,:});
     else
@@ -175,7 +175,7 @@ for t=Window:m-1
     % initialise wts as equally weighted
     %     Overlap_tsSR_Wts(t,:) = maxsr(AssetList, m_t,cov_t, returns_data.Cash(t));
     
-    Overlap_tsSR_Wts(t,:) = maxsr(returns_data{1+t-Window:t-1, :}, returns_data.Cash(t-1,:),backtest_object.Wts_lb,backtest_object.Wts_ub);
+    Overlap_tsSR_Wts(t,:) = maxsr(m_t,cov_t, returns_data.Cash(t-1,:),backtest_object.Wts_lb,backtest_object.Wts_ub);
 
     % 3. Balanced BH
     % initialise wts as equally weighted

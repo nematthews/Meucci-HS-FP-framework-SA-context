@@ -7,9 +7,6 @@ function [geo_SR] = geo_sr(SR_dif_t, f)
 % SR_dif_t - series of differencial/excess realised returns of an asset or portfolio
 % (type: array double, [T x 1] | timetable object)
 %
-% rfr_series - series of realised returns on a risk free asset eg cash
-% (type: array double, [T x 1])
-%
 % f - Number of periods within a yr (e.g 12 for monthly, 4 for quarterly)
 % (type: double) NOTE: default = 12 for annualised SR
 % Author: Nina Matthews (2023)
