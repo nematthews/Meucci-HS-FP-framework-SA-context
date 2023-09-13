@@ -1,4 +1,4 @@
-function [geo_ave] = geo_ave(Returns,f)
+function [geo_ave,f] = geo_ave(Returns,f)
 % Calculate the geometric average of input data, allows for annualisation
 % or adjusting for other time periods using f.
 %
@@ -9,7 +9,7 @@ function [geo_ave] = geo_ave(Returns,f)
 % (Type: timetable [T x J])
 %
 % f - Number of periods within a yr (e.g 12 for monthly, 4 for quarterly)
-% (type: double | char if 'annualised' is specified)
+% (type: double) -Defualt  =  1
 % Author: Nina Matthews (2023)
 
 
@@ -24,11 +24,6 @@ end
 
 if nargin < 2
    f = 1;
-end
-
-% Number of periods within a year (e.g., 12 for monthly)
-if strcmp(f, 'annualise')
-    f = 12;
 end
 
 %% Calculation

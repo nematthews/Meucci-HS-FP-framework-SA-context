@@ -11,7 +11,7 @@ function [geo_SR] = geo_sr(SR_dif_t, f)
 % (type: array double, [T x 1])
 %
 % f - Number of periods within a yr (e.g 12 for monthly, 4 for quarterly)
-% (type: double)
+% (type: double) NOTE: default = 12 for annualised SR
 % Author: Nina Matthews (2023)
 
 % $Revision: 1.2 $ $Date: 2023/09/12 15:03:01 $ $Author: Nina Matthews $
@@ -21,11 +21,10 @@ if istimetable(SR_dif_t)
     SR_dif_t = table2array(SR_dif_t);
 end
 
-% Number of periods within a year (e.g., 12 for monthly)
-if strcmp(f, 'annualise')
-    f = 12;
-else 
-    f = 1;
+% Number of periods within a year (e.g., 12 for monthly) DEFUALT HERE f =12
+% for annualised
+if nargin < 2
+   f = 12;
 end
 
 %% Annualised geometric differencial/excess returns for SR
