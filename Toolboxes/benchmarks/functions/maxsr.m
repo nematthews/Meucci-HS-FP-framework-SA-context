@@ -1,4 +1,4 @@
-function [x,retSR, rskSR] = maxsr(Returns, Rfr,lb,ub)
+function [x,retSR, rskSR] = maxsr(mu, Sigma, RFR,lb,ub)
 
 % Using MV asset allocation
 %
@@ -10,22 +10,20 @@ function [x,retSR, rskSR] = maxsr(Returns, Rfr,lb,ub)
 % NOTE: makes use of geometric means not arithmetic
 %
 %% INPUTS:
-% AssetReturns: object consisting of J assets and their returns 
-% over time period T
-% (Type: timetable [T x J])
+% mu: array contraining averages (geometric or arithmetic) for each
+% instrument
+% (Type: array [1 x J])
+%
+% Sigma: covariance matrix of the instruments
+% (Type: matrix (double) [J x J])
 
 % Author: Nina Matthews (2023)
 
 % $Revision: 1.1 $ $Date: 2023/05/09 19:09:01 $ $Author: Nina Matthews $
 
-% risk free rate
-RFR = Rfr;
-% monthy sampled arithmetic mean of simple returns
-mu = geo_ave(Returns);
+%% 
 % average risk free rate (when to use geometric average)
 ERFR = geo_ave(RFR); 
-% covariance
-Sigma = cov(Returns);
 % Equally weighted portfolio
 x0 = ones(size(mu))/length(mu);
 %initialise the weights
