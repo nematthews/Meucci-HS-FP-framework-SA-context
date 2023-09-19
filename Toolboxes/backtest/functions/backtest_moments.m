@@ -75,7 +75,7 @@ function [hsfp_mu, hsfp_cov,p] = backtest_moments(backtest_object)
 
 % Author: Nina Matthews (2023)
 
-% $Revision: 1.1 $ $Date: 2023/05/09 19:09:01 $ $Author: Nina Matthews $
+% $Revision: 1.5 $ $Date: 2023/05/09 19:09:01 $ $Author: Nina Matthews $
 
 %% Selection of HS-FP method for calculating Flexible Probabilites
 if strcmp(backtest_object.method, 'rolling_w')

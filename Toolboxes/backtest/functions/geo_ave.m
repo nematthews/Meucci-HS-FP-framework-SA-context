@@ -9,7 +9,7 @@ function [geo_ave,f] = geo_ave(Returns,f)
 % (Type: timetable [T x J])
 %
 % f - Number of periods within a yr (e.g 12 for monthly, 4 for quarterly)
-% (type: double) -Defualt  =  1
+% (type: double) -Default  =  1
 % Author: Nina Matthews (2023)
 
 
