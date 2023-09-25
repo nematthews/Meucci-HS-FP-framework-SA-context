@@ -1,31 +1,31 @@
 function[srStd,mu3,mu4,T]= sr_std(returns, T, mu3, mu4, sr)
 % Calculate the standard deviation of the Sharpe ratio estimator
-% distrubution given non-normal returns.
+% distribution given non-normal returns.
 %
 % This formula generalizes for both normal and non-normal returns.
 % https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1821643
 %
 %% INPUTS:
 %
-% 1. returns -  series of differencial/excess realised returns of an
+% 1. returns -  series of differential/excess realised returns of an
 % asset or portfolio
 % (type: array double, [T x 1] | timetable object)
 %
 % 2. T -  Number of returns samples used for `skew`, `kurtosis` and `sr`.
 % (Type: scalar)
 %
-% 3. mu3 - distrubution skewness as third moment expressed in the same
+% 3. mu3 - distribution skewness as third moment expressed in the same
 % frequency as the other parameters. NOTE: `skewness`=0 for normal returns.
 %
-% 4. mu4 - distrubution kurtosis as fourth moment expressed in the same
+% 4. mu4 - distribution kurtosis as fourth moment expressed in the same
 % frequency as the other parameters. NOTE: `kurtosis`=3 for normal returns.
 %
-% 4. sr -  Sharpe ratio in the same frequency as the other parameters. 
-% NB: not annualised
+% 5. sr -  Sharpe ratio in the same frequency as the other parameters. 
+% NB: not annualised.
 
 % Author: Nina Matthews (2023)
 
-% $Revision: 1.0 $ $Date: 2023/09/19 16:06:41 $ $Author: Nina Matthews $
+% $Revision: 1.0 $ $Date: 2023/09/25 14:06:41 $ $Author: Nina Matthews $
 
 %%
 % If returns is not a array, convert it to one

@@ -1,11 +1,11 @@
-function [geo_ave,f] = geo_ave(Returns,f)
+function [geo_ave,f] = geo_ave(returns,f)
 % Calculate the geometric average of input data, allows for annualisation
-% or adjusting for other time periods using f. Typically used to calcuate
-% portfolio returns for annualising. 
+% or adjusting for other time periods using f. Typically used to calculate
+% portfolio returns for annualising, if so "f" = 12 if returns are monthly. 
 %
 %
 %% INPUTS:
-% AssetReturns: object consisting of J assets and their returns 
+% returns: object consisting of J assets and their returns 
 % over time period T
 % (Type: timetable [T x J])
 %
@@ -18,8 +18,8 @@ function [geo_ave,f] = geo_ave(Returns,f)
 % $Revision: 1.1 $ $Date: 2023/013/09 14:18:23 $ $Author: Nina Matthews $
 
 %% Arg specification
-if istimetable(Returns)
-    Returns = table2array(Returns);
+if istimetable(returns)
+    returns = table2array(returns);
 end
 
 if nargin < 2
@@ -29,11 +29,11 @@ end
 %% Calculation
 
 % Storage for geometric ave of returns
-geo_ave= zeros(1,width(Returns));
+geo_ave= zeros(1,width(returns));
 
-for i = 1:width(Returns)
+for i = 1:width(returns)
 
-    PRet = Returns(:,i);
+    PRet = returns(:,i);
     % Number of periods under analysis
     n = height(PRet);
     % Calculate the geometric mean return (in decimals)
