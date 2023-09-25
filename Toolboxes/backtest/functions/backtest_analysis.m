@@ -274,7 +274,7 @@ Realised_tsPRet{2,8} = Overlap_tsCash_PRet;
 
 % %% Annualised geometric excess returns for SR
 
-% geo_SR = geo_sr(SR_dif_t, 'annualise');
+% geo_SR = geo_sr(SR_dif_t, 12);
 
 SR_dif_t = SR_dif_t(Window+1:t,:);
 % geo_SR_excessRet = zeros(1,width(SR_dif_t));

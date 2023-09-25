@@ -20,11 +20,12 @@ function[srStd,mu3,mu4,T]= sr_std(returns, T, mu3, mu4, sr)
 % 4. mu4 - distrubution kurtosis as fourth moment expressed in the same
 % frequency as the other parameters. NOTE: `kurtosis`=3 for normal returns.
 %
-% 4. sr -  Sharpe ratio in the same frequency as the other parameters.
+% 4. sr -  Sharpe ratio in the same frequency as the other parameters. 
+% NB: not annualised
 
 % Author: Nina Matthews (2023)
 
-% $Revision: 1.0 $ $Date: 2023/18/09 16:06:41 $ $Author: Nina Matthews $
+% $Revision: 1.0 $ $Date: 2023/09/19 16:06:41 $ $Author: Nina Matthews $
 
 %%
 % If returns is not a array, convert it to one

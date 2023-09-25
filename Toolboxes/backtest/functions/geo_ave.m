@@ -1,6 +1,7 @@
 function [geo_ave,f] = geo_ave(Returns,f)
 % Calculate the geometric average of input data, allows for annualisation
-% or adjusting for other time periods using f.
+% or adjusting for other time periods using f. Typically used to calcuate
+% portfolio returns for annualising. 
 %
 %
 %% INPUTS:
@@ -8,10 +9,9 @@ function [geo_ave,f] = geo_ave(Returns,f)
 % over time period T
 % (Type: timetable [T x J])
 %
-% f - Number of periods within a yr (e.g 12 for monthly, 4 for quarterly)
-% (type: double) -Default  =  1
-% Author: Nina Matthews (2023)
-
+% f - (Optional) number of periods within a yr (e.g 12 for monthly, 
+% 4 for quarterly) - Default = 1 i.e not annualised returns
+% (type: scalar)  
 
 % Author: Nina Matthews (2023)
 
