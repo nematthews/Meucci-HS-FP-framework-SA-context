@@ -1,4 +1,4 @@
-function [geo_SR] = geo_sr(dif_returns, f)
+function [geo_SR,geo_ExcessRet_ave,ExcessRet_sd] = geo_sr(dif_returns, f)
 % Calculate the Sharpe Ratio based off geometric averages of the risky
 % asset and a risk free asset given realised returns of the risky and risk
 % less.
