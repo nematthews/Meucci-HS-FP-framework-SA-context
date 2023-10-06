@@ -1,9 +1,9 @@
-function [Rolling_portfolioSet,Realised_tsPIndx,Realised_tsPRet_TT,Opt_tsWts,cov_con_n,t,hsfp_Prs] = backtest_analysis(backtest_object,Window,reg_lambda)
+function [SR_dif_t,geo_SR_dif,Rolling_portfolioSet,Realised_tsPIndx,Realised_tsPRet_TT,Opt_tsWts,cov_con_n,t,hsfp_Prs] = backtest_analysis(backtest_object,Window,reg_lambda)
 
-% NOTE: This function is very use specific to this project. It was created
-% to streamline the project code therefore does not generalise well.
-% Function can also be made more streamline but currently coded in a
-% practical quick manner.
+%% NOTE: This function is very use specific to this project. 
+% It was created to streamline the project code therefore does not 
+% generalise well. Function can also be made more streamline but currently
+% coded in a practical quick manner.
 %
 %% Primary INPUT:
 %% backtest_object - contains all data needed to calculate mu & sigma given
@@ -75,16 +75,23 @@ function [Rolling_portfolioSet,Realised_tsPIndx,Realised_tsPRet_TT,Opt_tsWts,cov
 % $Revision: 1.1 $ $Date: 2023/05/09 19:09:01 $ $Author: Nina Matthews $
 
 
-%% 1. Set up storage and initialise weights for Backtest %%%%%%%%%%%
+%% Data Management 
 portfolio_names = {'EW (CM)', 'MVSR max', 'BalFund (BH)', 'HRP', ...
     'BalFund (CM)', 'ALSI', 'ALBI', 'Cash'};
 
 returns_data = backtest_object.returns;
 signals_data = backtest_object.signals;
 
+% Subsetting for Balance Fund 
 tickersToExtract = {'JALSHTR_Index', 'Cash','ALB_Index'};
 BF_BH_TT = returns_data(:, tickersToExtract);
 returns_data = removevars(returns_data,'JALSHTR_Index');
+
+
+% Subset for HRP (remove cash as we have hard 5% allocation to cash)
+HPR_Ret_TT = removevars(returns_data,"Cash");
+
+%% 1. Set up storage and initialise weights for Backtest %%%%%%%%%%%
 
 %###### initialize inputs:
 [m,n]=size(returns_data); % size of full data set
@@ -113,8 +120,9 @@ Overlap_tsBH_Wts0 = zeros(m,3);   % for t-th month
 Overlap_tsBH_WtsEnd = zeros(m,3);
 Overlap_tsBH_PRet = zeros(m,1);
 % ### 4. HRP ###
-Overlap_tsHRP_Wts = zeros(m,n);
-Overlap_tsHRP_PRet = zeros(m,1);
+[j,k] = size(HPR_Ret_TT);
+Overlap_tsHRP_Wts = zeros(j,k);
+Overlap_tsHRP_PRet = zeros(j,1);
 % ### 5. Balanced Fund Constant Mix (CM) ###
 Overlap_tsCM_Wts0 = [0.60,0.05,0.35]; % [equity, cash, bonds] - balanced fund 60:5:35
 Overlap_tsCM_Wts = zeros(m,3);
@@ -143,12 +151,19 @@ for t=Window:m-1
         m_t = geo_ave(returns_data{1+t-Window:t-1,:});
         % Arithmetic Covariance:
         cov_t = cov(returns_data{1+t-Window:t-1,:});
+        cov_HRP_t = cov(HPR_Ret_TT{1+t-Window:t-1,:});
     else
         % Shift windows of returns and signals for HSFP each loop
         backtest_object.returns = returns_data(1+t-Window:t-1, :);
         backtest_object.signals = signals_data(1+t-Window:t-1, :);
         % Need to calc pr for each window (but type stays the same)
         [m_t, cov_t,hsfp_Prs] = backtest_moments(backtest_object);
+
+        %%% For HRP we need sperate HSFP estimations for decreased assets
+        % Shift windows of returns and signals for HSFP each loop
+        backtest_object.returns = HPR_Ret_TT(1+t-Window:t-1, :);
+        % Need to calc pr for each window (but type stays the same)
+        [~, cov_HRP_t,~] = backtest_moments(backtest_object);
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -182,7 +197,7 @@ for t=Window:m-1
     Overlap_tsBH_Wts0(Window,:) = Overlap_tsBH_Wts; % initial weights
 
     % 4. HRP
-    Overlap_tsHRP_Wts(t,:) = hrpestimate(cov_t)';
+    Overlap_tsHRP_Wts(t,:) = hrpestimate(cov_HRP_t)';
 
     % 5. Balanced CM
     % 3. Rebalance weighs
@@ -205,7 +220,7 @@ for t=Window:m-1
     SR_dif_t(t+1,3) =  Overlap_tsBH_PRet(t+1,:) - returns_data.Cash(t+1,:);
 
     % 4. HRP
-    Overlap_tsHRP_PRet(t+1,:) = Overlap_tsHRP_Wts(t,:) * transpose(returns_data{t+1,:});
+    Overlap_tsHRP_PRet(t+1,:) = Overlap_tsHRP_Wts(t,:) * transpose(HPR_Ret_TT{t+1,:});
     % SR excess Ret
     SR_dif_t(t+1,4) =  Overlap_tsHRP_PRet(t+1,:) - returns_data.Cash(t+1,:);
 
@@ -293,20 +308,9 @@ Realised_tsPRet_TT = timetable(returns_data.Time(Window:t,:), ...
     'Cash'});
 
 % %% Annualised geometric excess returns for SR
-
-% geo_SR = geo_sr(SR_dif_t, 12);
-
+% From (Window + 1) to account for initial 0 return.
 SR_dif_t = SR_dif_t(Window+1:t,:);
-% geo_SR_excessRet = zeros(1,width(SR_dif_t));
-% f = 12; % Number of periods within a year (e.g., 12 for monthly)
-% for port = 1:width(SR_dif_t)
-% 
-%     PRet = SR_dif_t(:,port);
-%     % Number of periods under analysis
-%     n = height(PRet);
-%     % Calculate the geometric mean return (in decimals)
-%     geo_SR_excessRet(port) = ((prod(1 + PRet))^ (f / n)) - 1;
-% end
+geo_SR_dif = geo_sr(SR_dif_t,12);
 
 %% 7. Backtest Portfolio SHARPE RATIOS %%%%%%%%%%%
 % Calculste the SR differencial/excess retunr at each time step
