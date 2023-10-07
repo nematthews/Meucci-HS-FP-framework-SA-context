@@ -1,13 +1,13 @@
-function [SR_dif_t,geo_SR_dif,Rolling_portfolioSet,Realised_tsPIndx,Realised_tsPRet_TT,Opt_tsWts,cov_con_n,t,hsfp_Prs] = backtest_analysis(backtest_object,Window,reg_lambda)
+function [SR_dif_t,geo_SR_dif,Rolling_portfolioSet,Realised_tsPIndx,Realised_tsPRet_TT,Opt_tsWts,cov_con_n,t,hsfp_Prs] = backtest_analysis(backtest_object,Window,HRP_cashless,reg_lambda)
 
 %% NOTE: This function is very use specific to this project. 
-% It was created to streamline the project code therefore does not 
-% generalise well. Function can also be made more streamline but currently
-% coded in a practical quick manner.
+% It was created to streamline the project code therefore does not
+% currently generalise well. Function can be made more streamline but currently
+% coded with time constraints in mind. 
 %
 %% Primary INPUT:
-%% backtest_object - contains all data needed to calculate mu & sigma given
-% a selected method.
+%% backtest_object 
+% - contains all info needed to calculate mu & sigma given a selected method.
 % (Type: 1x1 struct with 6 fields)
 %
 % backtest_object = struct('returns',[],'Wts_lb',[],'Wts_ub',[],'signals',[],'method',[], 'parameters',[]);
@@ -45,7 +45,8 @@ function [SR_dif_t,geo_SR_dif,Rolling_portfolioSet,Realised_tsPIndx,Realised_tsP
 % hsfp_parameters = struct('window',[],'tau',[],'alpha',[],'z_target',[],
 % 'gamma',[],'h',[], 'tau_prior',[],'ensemble_wt_method',[]);
 %
-%% Additional INPUTS 
+%% Additional INPUTS: 
+%
 % Window - window length using the same sample frequency as returns data
 % (Type: scalar)
 %
@@ -55,6 +56,7 @@ function [SR_dif_t,geo_SR_dif,Rolling_portfolioSet,Realised_tsPIndx,Realised_tsP
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Example: backtest_object expected  (this case window needed for rolling_w)
+%
 % hsfp_parameters = struct('window',[],'tau',[],'alpha',[],'z_target',[],
 % 'gamma',[],'h',[], 'tau_prior',[],'ensemble_wt_method',[]);
 % hsfp_parameters.window = Window_len (NOTE: cannot exceed Window length
@@ -72,7 +74,7 @@ function [SR_dif_t,geo_SR_dif,Rolling_portfolioSet,Realised_tsPIndx,Realised_tsP
 
 % Author: Nina Matthews (2023)
 
-% $Revision: 1.1 $ $Date: 2023/05/09 19:09:01 $ $Author: Nina Matthews $
+% $Revision: 1.1 $ $Date: 2023/07/10 10:24:01 $ $Author: Nina Matthews $
 
 
 %% Data Management 
@@ -89,8 +91,11 @@ returns_data = removevars(returns_data,'JALSHTR_Index');
 
 
 % Subset for HRP (remove cash as we have hard 5% allocation to cash)
+if HRP_cashless == 1
 HPR_Ret_TT = removevars(returns_data,"Cash");
-
+else
+    HPR_Ret_TT = returns_data;
+end
 %% 1. Set up storage and initialise weights for Backtest %%%%%%%%%%%
 
 %###### initialize inputs:
@@ -169,19 +174,21 @@ for t=Window:m-1
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Regularization parameter (lambda)
     % If reg_lambda is specified regularise cov matrix else skip:
-    if nargin > 2 
+    if nargin > 3
     % Identity matrix of the same size as Cov
     n = size(cov_t,1);  % Assuming S is a square matrix
     I = eye(n);
+    I_HRP = eye(size(cov_HRP_t,1));
     % Compute the regularized covariance matrix (R)
     cov_t = cov_t + reg_lambda * I;
+    cov_HRP_t = cov_HRP_t + reg_lambda * I_HRP;
     end
 
     % Checking condition number of cov at each t:
     cov_con_n(t,:) = cond(cov_t);
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    %%%%% WEIGHTINGS %%%%%%
+    %%%%% WEIGHTINGS Generation %%%%%%
     % 1. EW
     % initialise wts as equally weighted
     Overlap_tsEW_Wts(t,:) = Overlap_tsEW_Wts0; % Constant Mix (CM)
