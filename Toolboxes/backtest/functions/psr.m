@@ -36,7 +36,7 @@ function psr = psr(dif_returns, sr_benchmark, sr, srStd)
 
 
 % $Revision: 1.2 $ $Date: 2023/09/25 14:03:01 $ $Author: Nina Matthews $
-%%
+%% Input checks
 if istimetable(dif_returns)
     dif_returns = table2array(dif_returns);
 end
