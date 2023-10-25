@@ -4,9 +4,9 @@ classdef backtestedPortfolios
 
         PortfoliosList      cell            % cell array
         AssetList           cell            % cell array
-        Attributions        table          % structure
+        Attributions        table           % structure
         RollingPerformance  timetable       % Timetable
-        HSFP_Prs = []                       % Empty for storage
+        HSFP_Prs            = []            % Empty for storage
         NumPortfolios       (1,1) double    % scalar
         DataType            (1,1) string =  'backtestedPortfolios'
         ExcessReturns       double
@@ -20,9 +20,10 @@ classdef backtestedPortfolios
         Returns             timetable
         Signals             timetable           % Timetable
         RegLambda           (1,1) double = 0    % Default (no regularisation)
+        WinsorStd           double {mustBeNonnegative} = []  % if empty don't winsorise
         MVWts_lb            (1,:) double        % vector of lower bounds
         MVWts_ub            (1,:) double        % Vector of upper bounds
-        HRPcashConstriant   (1,1) double {mustBeNonnegative} = 0 % Default no constriant
+        cashConstriant   (1,1) double {mustBeNonnegative} = 1 % Default no constriant
         Method              (1,1) string {mustBeMember(Method,{'none', ...
             'rolling_w','exp_decay','crisp', 'kernel', ...
             'e_pooling', 'ew_ensemble', 'cb_ensemble'})} = 'none'
@@ -143,7 +144,16 @@ classdef backtestedPortfolios
             backtestedPortfolios.PortfoliosList = {'EW (CM)', 'MVSR max',...
                 'BalFund (BH)', 'HRP', ...
                 'BalFund (CM)', 'ALSI', 'ALBI', 'Cash'};
-
+            %% Winsorise Returns
+            if ~isempty(backtestedPortfolios.WinsorStd)
+                Return_matrix = table2array(backtestedPortfolios.Returns);
+                [wx,~,~,~] = winsorise(Return_matrix,backtestedPortfolios.WinsorStd);
+                winsorisedRet_TT = array2timetable(wx,'RowTimes',backtestedPortfolios.Returns.Time);
+                winsorisedRet_TT.Properties.VariableNames = backtestedPortfolios.Returns.Properties.VariableNames;
+                backtestedPortfolios.Returns = winsorisedRet_TT;
+        
+            end 
+            %%
             returns_data = backtestedPortfolios.Returns;
             Cash = backtestedPortfolios.Returns(:,'Cash');
             signals_data = backtestedPortfolios.Signals;
@@ -154,7 +164,7 @@ classdef backtestedPortfolios
             returns_data = removevars(returns_data,'JALSHTR_Index');
 
             % Subset for HRP (remove cash as we have hard allocation to cash)
-            if backtestedPortfolios.HRPcashConstriant ~= 0
+            if backtestedPortfolios.cashConstriant ~= 1
                 % if not set to default of non cash constraint
                 HPR_Ret_TT = removevars(returns_data,"Cash");
             else
@@ -198,6 +208,16 @@ classdef backtestedPortfolios
             Overlap_tsCM_PRet = zeros(m,1);
 
             %% Set weight constraints for asset classes
+            
+            %%% if staement to check if CC = 1 then dont incoporte
+            %%% constraint
+            if backtestedPortfolios.cashConstriant == 1
+                backtestedPortfolios.MVWts_lb = [0 0 0 0 0];
+                backtestedPortfolios.MVWts_ub = [1 1 1 1 1];
+            else
+                backtestedPortfolios.MVWts_lb = [0 0 0 0 backtestedPortfolios.cashConstriant];
+                backtestedPortfolios.MVWts_ub = [1 1 1 1 backtestedPortfolios.cashConstriant];
+            end
             if isempty(backtestedPortfolios.MVWts_lb)
                 backtestedPortfolios.MVWts_lb = zeros(1,n);
             end
@@ -331,12 +351,12 @@ classdef backtestedPortfolios
             % assets. eg SR has 6 but BF have 3.
 
             %%% Adjust HRP if cash constraint is implemented:
-            if backtestedPortfolios.HRPcashConstriant ~=0
+            if backtestedPortfolios.cashConstriant ~=1
                 % Downweight the equity controls to (1- CC)%
-                Overlap_tsHRP_Wts = Overlap_tsHRP_Wts.*(1-backtestedPortfolios.HRPcashConstriant);
+                Overlap_tsHRP_Wts = Overlap_tsHRP_Wts.*(1-backtestedPortfolios.cashConstriant);
 
                 % Cash to add back based on CC 
-                cashConstraint = backtestedPortfolios.HRPcashConstriant * ones(size(Overlap_tsHRP_Wts, 1), 1);
+                cashConstraint = backtestedPortfolios.cashConstriant * ones(size(Overlap_tsHRP_Wts, 1), 1);
                 Overlap_tsHRP_Wts = [Overlap_tsHRP_Wts, cashConstraint];
                
             end
