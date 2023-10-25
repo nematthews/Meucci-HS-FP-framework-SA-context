@@ -22,7 +22,7 @@ classdef backtestedPortfolios
         RegLambda           (1,1) double = 0    % Default (no regularisation)
         MVWts_lb            (1,:) double        % vector of lower bounds
         MVWts_ub            (1,:) double        % Vector of upper bounds
-        HRPcashConstriant   (1,1) double {mustBeMember(HRPcashConstriant,[1,0])} = 0
+        HRPcashConstriant   (1,1) double {mustBeNonnegative} = 0 % Default no constriant
         Method              (1,1) string {mustBeMember(Method,{'none', ...
             'rolling_w','exp_decay','crisp', 'kernel', ...
             'e_pooling', 'ew_ensemble', 'cb_ensemble'})} = 'none'
@@ -153,8 +153,9 @@ classdef backtestedPortfolios
             BF_BH_TT = returns_data(:, tickersToExtract);
             returns_data = removevars(returns_data,'JALSHTR_Index');
 
-            % Subset for HRP (remove cash as we have hard 5% allocation to cash)
-            if backtestedPortfolios.HRPcashConstriant == 1
+            % Subset for HRP (remove cash as we have hard allocation to cash)
+            if backtestedPortfolios.HRPcashConstriant ~= 0
+                % if not set to default of non cash constraint
                 HPR_Ret_TT = removevars(returns_data,"Cash");
             else
                 HPR_Ret_TT = returns_data;
@@ -330,13 +331,14 @@ classdef backtestedPortfolios
             % assets. eg SR has 6 but BF have 3.
 
             %%% Adjust HRP if cash constraint is implemented:
-            if backtestedPortfolios.HRPcashConstriant == 1
-                % Downweight the equity controls to 95%
-                Overlap_tsHRP_Wts = Overlap_tsHRP_Wts.*0.95;
+            if backtestedPortfolios.HRPcashConstriant ~=0
+                % Downweight the equity controls to (1- CC)%
+                Overlap_tsHRP_Wts = Overlap_tsHRP_Wts.*(1-backtestedPortfolios.HRPcashConstriant);
 
-                % Cash to add back
-                cashConstraint = 0.05 * ones(size(Overlap_tsHRP_Wts, 1), 1);
+                % Cash to add back based on CC 
+                cashConstraint = backtestedPortfolios.HRPcashConstriant * ones(size(Overlap_tsHRP_Wts, 1), 1);
                 Overlap_tsHRP_Wts = [Overlap_tsHRP_Wts, cashConstraint];
+               
             end
 
             % Initialize the cell array
