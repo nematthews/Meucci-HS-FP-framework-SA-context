@@ -23,7 +23,7 @@ classdef backtestedPortfolios
         WinsorStd           double {mustBeNonnegative} = []  % if empty don't winsorise
         MVWts_lb            (1,:) double        % vector of lower bounds
         MVWts_ub            (1,:) double        % Vector of upper bounds
-        cashConstriant   (1,1) double {mustBeNonnegative} = 1 % Default no constriant
+        CashConstriant   (1,1) double {mustBeNonnegative} = 1 % Default no constriant
         Method              (1,1) string {mustBeMember(Method,{'none', ...
             'rolling_w','exp_decay','crisp', 'kernel', ...
             'e_pooling', 'ew_ensemble', 'cb_ensemble'})} = 'none'
@@ -164,7 +164,7 @@ classdef backtestedPortfolios
             returns_data = removevars(returns_data,'JALSHTR_Index');
 
             % Subset for HRP (remove cash as we have hard allocation to cash)
-            if backtestedPortfolios.cashConstriant ~= 1
+            if backtestedPortfolios.CashConstriant ~= 1
                 % if not set to default of non cash constraint
                 HPR_Ret_TT = removevars(returns_data,"Cash");
             else
@@ -211,12 +211,12 @@ classdef backtestedPortfolios
             
             %%% if staement to check if CC = 1 then dont incoporte
             %%% constraint
-            if backtestedPortfolios.cashConstriant == 1
+            if backtestedPortfolios.CashConstriant == 1
                 backtestedPortfolios.MVWts_lb = [0 0 0 0 0];
                 backtestedPortfolios.MVWts_ub = [1 1 1 1 1];
             else
-                backtestedPortfolios.MVWts_lb = [0 0 0 0 backtestedPortfolios.cashConstriant];
-                backtestedPortfolios.MVWts_ub = [1 1 1 1 backtestedPortfolios.cashConstriant];
+                backtestedPortfolios.MVWts_lb = [0 0 0 0 backtestedPortfolios.CashConstriant];
+                backtestedPortfolios.MVWts_ub = [1 1 1 1 backtestedPortfolios.CashConstriant];
             end
             if isempty(backtestedPortfolios.MVWts_lb)
                 backtestedPortfolios.MVWts_lb = zeros(1,n);
@@ -351,12 +351,12 @@ classdef backtestedPortfolios
             % assets. eg SR has 6 but BF have 3.
 
             %%% Adjust HRP if cash constraint is implemented:
-            if backtestedPortfolios.cashConstriant ~=1
+            if backtestedPortfolios.CashConstriant ~=1
                 % Downweight the equity controls to (1- CC)%
-                Overlap_tsHRP_Wts = Overlap_tsHRP_Wts.*(1-backtestedPortfolios.cashConstriant);
+                Overlap_tsHRP_Wts = Overlap_tsHRP_Wts.*(1-backtestedPortfolios.CashConstriant);
 
                 % Cash to add back based on CC 
-                cashConstraint = backtestedPortfolios.cashConstriant * ones(size(Overlap_tsHRP_Wts, 1), 1);
+                cashConstraint = backtestedPortfolios.CashConstriant * ones(size(Overlap_tsHRP_Wts, 1), 1);
                 Overlap_tsHRP_Wts = [Overlap_tsHRP_Wts, cashConstraint];
                
             end
