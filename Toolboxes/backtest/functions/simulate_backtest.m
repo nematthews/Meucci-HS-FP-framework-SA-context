@@ -1,4 +1,4 @@
-function [simulationCellArray] = SimulateBacktest(configurationMatrix,base_backtestObject)
+function [simulationCellArray] = simulate_backtest(configurationMatrix,base_backtestObject)
 % Generates multiple backtest simulations when given a configuration matrix
 % that contains multiple combinations of varying hyper parameters. The
 % configuartion matrix can be constructed manually based on a users choice
