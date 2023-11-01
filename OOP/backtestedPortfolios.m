@@ -1,5 +1,5 @@
 % backtestedPortfolios class definition
-classdef backtestedPortfolios
+classdef backtestedPortfolios 
     properties (SetAccess = private) % Can only change property through a method
 
         PortfoliosList      cell            % cell array
@@ -58,6 +58,26 @@ classdef backtestedPortfolios
         % 2.  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% %%%%% backtest_analysis Fn %%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        function objCopy = copy(obj)
+            % Create a new object as a copy of the original object
+            objCopy = backtestedPortfolios();
+            % Copy all the properties you want to duplicate
+            objCopy.HSFPparameters = obj.HSFPparameters;
+            objCopy.WindowLength = obj.WindowLength;
+                objCopy.MVWts_lb = obj.MVWts_lb;
+                objCopy.MVWts_ub = obj.MVWts_ub;
+            objCopy.Returns = obj.Returns;
+            objCopy.Method = obj.Method;
+            objCopy.Signals = obj.Signals;
+            objCopy.CashConstriant = obj.CashConstriant;
+            objCopy.WinsorStd = obj.WinsorStd;
+            objCopy.RegLambda = obj.RegLambda;
+
+            % Copy other properties as needed
+        end
+
+
         function [backtestedPortfolios] = OOPbacktest_analysis(backtestedPortfolios)
 
             %% NOTE: This function is very use specific to this project.
