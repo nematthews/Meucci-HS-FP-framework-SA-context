@@ -57,7 +57,7 @@ function [corr1, clstrs, silh] = clusterKMeansTop(corr0, max_K, n_init)
         % Extract all idx values from redo clusters
         keysRedo = [];
         for i = redoClusters
-            keysRedo = [keysRedo, MVclstrs{i}];
+            keysRedo = [keysRedo, clstrs{i}];
         end
         % convert char to double
         keysRedo = cellfun(@(x)str2double(x), keysRedo);

@@ -38,7 +38,7 @@ function [corr1, clstrs, silh] = clusterKMeansBase(corr0, max_K, n_init,options)
     silh_vec = []; % Creates an empty vector
 
 for init = 1:n_init
-        for i = 3:max_K
+        for i = 2:max_K
            
            [idx,~,~,~] = kmeans(dist, i,'Distance','sqeuclidean','Options' ...
                             ,options,'MaxIter',100,...
