@@ -40,9 +40,12 @@ function [corr1, clstrs, silh] = clusterKMeansBase(corr0, max_K, n_init,options)
 for init = 1:n_init
         for i = 2:max_K
            
+            
            [idx,~,~,~] = kmeans(dist, i,'Distance','sqeuclidean','Options' ...
-                            ,options,'MaxIter',100,...
+                            ,options,'MaxIter',1000,...
                             'Display','final','Replicates',1);
+
+           % [idx,~,~,~] = kmeans(dist, i,'Distance','sqeuclidean');
 
             silh_ = silhouette(dist, idx);
             % Stores current and previous quality measure for comparision
