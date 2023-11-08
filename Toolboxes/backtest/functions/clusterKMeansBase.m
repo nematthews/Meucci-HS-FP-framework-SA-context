@@ -31,6 +31,15 @@ function [corr1, clstrs, silh] = clusterKMeansBase(corr0, max_K, n_init,options)
         n_init = 10;
     end
 
+    if nargin < 4
+        options = [];
+    end
+    
+    % Set random number generator for consistency:
+    % globalStream = RandStream('dsfmt19937','Seed',3);
+    % RandStream.setGlobalStream(globalStream);
+
+    %%%%%%
     corr0_table = array2table(corr0);
     
     % Calculate distance matrix (dist) and initialize silh
@@ -39,14 +48,16 @@ function [corr1, clstrs, silh] = clusterKMeansBase(corr0, max_K, n_init,options)
 
 for init = 1:n_init
         for i = 2:max_K
-           
+                % Set random number generator for consistency:
+                rng(1); 
+                [idx,~,~,~] = kmeans(dist, i,'Distance','sqeuclidean','Options' ...
+                            ,options,'MaxIter',100,...
+                            'Display','off','Replicates',1);
             
-           [idx,~,~,~] = kmeans(dist, i,'Distance','sqeuclidean','Options' ...
-                            ,options,'MaxIter',1000,...
-                            'Display','final','Replicates',1);
-
-           % [idx,~,~,~] = kmeans(dist, i,'Distance','sqeuclidean');
-
+            
+            % rng(1); 
+            % [idx,~,~,~] = kmeans(dist, i,'Distance','sqeuclidean');
+            rng(1); 
             silh_ = silhouette(dist, idx);
             % Stores current and previous quality measure for comparision
             stat = [mean(silh_)/std(silh_), mean(silh_vec)/std(silh_vec)];
