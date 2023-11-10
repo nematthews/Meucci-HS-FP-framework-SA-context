@@ -1,4 +1,4 @@
-function [redoClusters,corr1, clstrs, silh] = clusterKMeansTop(corr0, max_K, n_init, options)
+function [corr1, clstrs, silh] = clusterKMeansTop(corr0, max_K, n_init, options)
 % This function performs a ** SECOND-pass ** estimate of E[K] for an unsupervised
 % learning approach proposed by Marcos López de Prado & Michael J. Lewis
 % (2019).
@@ -49,6 +49,7 @@ if nargin < 4
     options = [];
 end
 
+disp("CALL MAIN")
 %% Perform base cluster to initialise E[K]
 [corr1, clstrs, silh] = clusterKMeansBase(corr0, max_K, n_init,options);
 % Calc Tstats per cluster
@@ -58,6 +59,7 @@ for i = 1:length(keys(clstrs))
     % Turn each string element in cells to a double
     series_indx = cellfun(@(x)str2double(x), clstrs{i});
     % Calculate each cluster's Tstat
+    format long
     clusterTstats{i} = mean(silh(series_indx)) / std(silh(series_indx));
 end
 
@@ -67,8 +69,12 @@ tStatMean = mean(cell2mat(values(clusterTstats)));
 %% extract cluster # that have tstat less than average
 redoClusters = find(cell2mat(values(clusterTstats)) < tStatMean);
 
+
 %% Recluster clusters with low tstats
 if length(redoClusters) <= 2
+    corrNew = corr1;
+    clstrsNew = clstrs;
+    silhNew = silh;
     return;
 else
     disp("Else entered")
@@ -82,7 +88,7 @@ else
 
     % Index out the correlations in redo clusters to recluster
     corrTmp = corr0(keysRedo, keysRedo);
-    meanRedoTstat = mean(cell2mat(clusterTstats(redoClusters)));
+    % meanRedoTstat = mean(cell2mat(clusterTstats(redoClusters)));
     disp("Before recursive call")
     %% Recursively call itself
 
@@ -107,7 +113,7 @@ else
             clstrsToKeep(i) = clstrs{i};
         end
     end
-
+    
     [corrNew, clstrsNew, silhNew] = makeNewOutputs(corr0, clstrsToKeep, clstrs2);
 
 

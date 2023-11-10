@@ -3,51 +3,60 @@ function [corrNew, clstrsNew, silhNew] = makeNewOutputs(corr0, clstrs, clstrs2)
 %
 %% INPUTS:
 %
-% corr0 - original correlation matrix of M simulated trails' realised returns.
+% corr0 - correlation matrix of M simulated trails' realised returns.
 % (type: double, [M x M])
 %
-% clstrs - user defined maximum number of clusters to generate by K-mean.
+% clstrs - 
 %
-% clstrs2 - number of times the clustering process needs to be repeated.
-% Type
-
-%% 
-
-    % Initialize variables
-    clstrsNew = dictionary;
+% clstrs2 - 
+%%
+    clstrsNew = containers.Map;
     newIdx = [];
 
-    % Copy clusters from clstrs
+    % Populate clstrsNew with clusters from clstrs
     for i = keys(clstrs)
-        clstrsNew(int32(length(clstrsNew.keys) + 1)) = clstrs(i);
+        clstrsNew(clstrsNew.Count + 1) = clstrs(i);
     end
 
-    % Copy clusters from clstrs2
+    % Populate clstrsNew with clusters from clstrs2
     for i = keys(clstrs2)
-        clstrsNew(int32(length(clstrsNew.keys) + 1)) = clstrs2(i);
+        clstrsNew(clstrsNew.Count + 1) = clstrs2(i);
     end
 
-    % Extend newIdx
-    cellfun(@(x) newIdx.extend(x), values(clstrsNew));
+    % Concatenate values in clstrsNew and update newIdx
+    concatenatedValues = vertcat(values(clstrsNew).');
 
-    % Reorder corr0
+    % Map newIdx to the concatenated values
+    for i = 1:length(concatenatedValues)
+        newIdx = [newIdx, concatenatedValues{i}];
+    end
+
+    % Extract new correlation matrix
     corrNew = corr0(newIdx, newIdx);
 
-    % Calculate distance matrix
+    % Calculate the distance matrix
     dist = sqrt((1 - fillmissing(corr0, 'constant', 0)) / 2);
 
     % Initialize kmeans_labels
-    kmeans_labels = zeros(1, length(dist.Properties.VariableNames));
+    kmeans_labels = zeros(1, size(dist, 2));
 
-    % Assign cluster labels to indices
+    % Assign labels to data points based on clusters in clstrsNew
     for i = keys(clstrsNew)
-        idxs = cellfun(@(x) find(ismember(dist.Properties.RowNames, x)), values(clstrsNew(i)));
+        idxs = cellfun(@(k) find(strcmp(dist.Properties.RowNames, k)), clstrsNew(i));
         kmeans_labels(idxs) = i;
     end
 
     % Calculate silhouette values
-    silhNew = silhouette(dist{:,:}, kmeans_labels);
+    silhNew = silhouette(dist, kmeans_labels);
 
-    % Convert silhouette values to a Series
-    silhNew = array2table(silhNew, 'RowNames', dist.Properties.RowNames);
+    % Create a MATLAB table for silhNew with the correct row names
+    silhNew = array2table(silhNew.', 'VariableNames', dist.Properties.RowNames);
+
+    % Convert the table to a containers.Map
+    silhNew = containers.Map(silhNew.Properties.VariableNames, table2cell(silhNew));
+
+    % Return the results
+    corrNew = corrNew{:, :};
+    clstrsNew = clstrsNew.Values;
+    silhNew = silhNew;
 end
