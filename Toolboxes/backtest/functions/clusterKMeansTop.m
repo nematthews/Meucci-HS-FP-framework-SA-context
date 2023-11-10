@@ -1,5 +1,5 @@
 function [redoClusters,corr1, clstrs, silh] = clusterKMeansTop(corr0, max_K, n_init, options)
-% This function performs a ** second-pass ** estimate of E[K] for an unsupervised
+% This function performs a ** SECOND-pass ** estimate of E[K] for an unsupervised
 % learning approach proposed by Marcos López de Prado & Michael J. Lewis
 % (2019).
 % The purpose of estimating E[K] is to establish the number of independent
@@ -15,13 +15,22 @@ function [redoClusters,corr1, clstrs, silh] = clusterKMeansTop(corr0, max_K, n_i
 %
 %% INPUTS:
 %
-% corr0 - correlation matrix of M simulated trails' realised returns
+% corr0 - correlation matrix of M simulated trails' realised returns.
+% (type: double, [M x M])
 %
 % max_K - user defined maximum number of clusters to generate by K-mean.
+% (type: double) 
 %
 % n_init - number of times the clustering process needs to be repeated.
-% Type
- 
+% (type: double) 
+%
+% options - user defined options that are provided to the kmeans algorithm.
+% Used to implement parallel computing abilities. 
+% E.g.:
+% stream = RandStream('mlfg6331_64');  % Random number stream
+% options = statset('UseParallel',1,'UseSubstreams',1,...
+%     'Streams',stream);
+% (type: structure)
 %% 
 
     % Check if maxNumClusters and n_init are provided, otherwise use default values
