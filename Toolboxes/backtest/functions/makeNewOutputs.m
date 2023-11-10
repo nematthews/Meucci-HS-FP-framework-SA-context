@@ -3,7 +3,8 @@ function [corrNew, clstrsNew, silhNew] = makeNewOutputs(corr0, clstrs, clstrs2)
 %
 %% INPUTS:
 %
-% corr0 - correlation matrix of M simulated trails' realised returns
+% corr0 - original correlation matrix of M simulated trails' realised returns.
+% (type: double, [M x M])
 %
 % clstrs - user defined maximum number of clusters to generate by K-mean.
 %

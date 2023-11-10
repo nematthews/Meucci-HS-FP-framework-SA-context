@@ -37,6 +37,10 @@ function [redoClusters,corr1, clstrs, silh] = clusterKMeansTop(corr0, max_K, n_i
     if nargin < 2
         max_K = 10;
     end
+    %%%% NOTE: max_K can't exceed number of paths
+    if max_K > size(corr0,1)
+            max_K = size(corr0,1)-1;
+    end
     if nargin < 3
         n_init = 10;
     end
@@ -45,23 +49,25 @@ function [redoClusters,corr1, clstrs, silh] = clusterKMeansTop(corr0, max_K, n_i
         options = [];
     end
        
-    % Perform base cluster to initialise E[K]
+   %% Perform base cluster to initialise E[K]
     [corr1, clstrs, silh] = clusterKMeansBase(corr0, max_K, n_init,options);
     % Calc Tstats per cluster
     clusterTstats = dictionary;
 
     for i = 1:length(keys(clstrs))
+        % Turn each string element in cells to a double
         series_indx = cellfun(@(x)str2double(x), clstrs{i});
+        % Calculate each cluster's Tstat
         clusterTstats{i} = mean(silh(series_indx)) / std(silh(series_indx));
     end
     
-    % calc average tstat across clusters
+    % calc Average tstat across clusters
     tStatMean = mean(cell2mat(values(clusterTstats)));
     
-    % extract cluster # that have tstat less than average
+    %% extract cluster # that have tstat less than average
     redoClusters = find(cell2mat(values(clusterTstats)) < tStatMean);
     
-    % Recluster clusters with low tstats
+    %% Recluster clusters with low tstats
     if length(redoClusters) <= 2
         return;
     else
@@ -79,10 +85,20 @@ function [redoClusters,corr1, clstrs, silh] = clusterKMeansTop(corr0, max_K, n_i
         meanRedoTstat = mean(cell2mat(clusterTstats(redoClusters))); 
          disp("Before recursive call")
         %% Recursively call itself
-        [corr2, clstrs2, silh2] = clusterKMeansTop(corrTmp, max_K, n_init);
+        
+        %%%% NOTE: max_K can't exceed number of paths
+        if max_K > size(corrTmp,1)
+            max_K = size(corrTmp,1)-1;
+        end
+
+        [~, clstrs2, ~] = clusterKMeansTop(corrTmp, max_K, n_init);
         disp("End recursive call")
         % When the call eventually stops as if statement is met:
         % Make new outputs, if necessary
+
+        % Takes all culsters in cluster that are not in RedoClusters and
+        % combines it with the new clusters2
+
         [corrNew, clstrsNew, silhNew] = makeNewOutputs(corr0, containers.Map(clstrs), clstrs2);
 
 
