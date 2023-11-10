@@ -75,7 +75,7 @@ for init = 1:n_init
             corr1 = corr0(newIdx, newIdx); % The r & c of the input corr matrix reordered based on cluster assignments.
 
             % Define DICTIONARY
-            clstrs = dictionary;
+            clstrs = configureDictionary("double","cell");
 
             % Iterate through each cluster: KEY
             for j = 1:n_clusters
@@ -83,12 +83,8 @@ for init = 1:n_init
                 % Find the indices of variables in the current cluster
                 clusterIndices = find(idx == j);
 
-                % Get the corresponding variable names: VALUES
-                corr0_table.Properties.VariableNames = compose(string(1:width(corr0_table)));
-                clusterVariableNames = corr0_table.Properties.VariableNames(clusterIndices);
-
                 % Store the variable names in the j-th cell
-                clstrs{j} = clusterVariableNames;
+                clstrs{j} = clusterIndices;
             end
         end
     end
