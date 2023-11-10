@@ -1,4 +1,4 @@
-function [corr1, clstrs, silh] = clusterKMeansTop(corr0, max_K, n_init)
+function [redoClusters,corr1, clstrs, silh] = clusterKMeansTop(corr0, max_K, n_init, options)
 % This function performs a ** second-pass ** estimate of E[K] for an unsupervised
 % learning approach proposed by Marcos López de Prado & Michael J. Lewis
 % (2019).
@@ -31,10 +31,13 @@ function [corr1, clstrs, silh] = clusterKMeansTop(corr0, max_K, n_init)
     if nargin < 3
         n_init = 10;
     end
+
+    if nargin < 4
+        options = [];
+    end
        
     % Perform base cluster to initialise E[K]
-    [corr1, clstrs, silh] = clusterKMeansBase(corr0, max_K, n_init);
-    
+    [corr1, clstrs, silh] = clusterKMeansBase(corr0, max_K, n_init,options);
     % Calc Tstats per cluster
     clusterTstats = dictionary;
 
@@ -65,10 +68,10 @@ function [corr1, clstrs, silh] = clusterKMeansTop(corr0, max_K, n_init)
         % Index out the correlations in redo clusters to recluster
         corrTmp = corr0(keysRedo, keysRedo);
         meanRedoTstat = mean(cell2mat(clusterTstats(redoClusters))); 
-
+         disp("Before recursive call")
         %% Recursively call itself
-        [corr2, clstrs2, silh2] = clusterKMeansTop(corrTmp, size(corrTmp, 1) - 1, n_init);
-
+        [corr2, clstrs2, silh2] = clusterKMeansTop(corrTmp, max_K, n_init);
+        disp("End recursive call")
         % When the call eventually stops as if statement is met:
         % Make new outputs, if necessary
         [corrNew, clstrsNew, silhNew] = makeNewOutputs(corr0, containers.Map(clstrs), clstrs2);
