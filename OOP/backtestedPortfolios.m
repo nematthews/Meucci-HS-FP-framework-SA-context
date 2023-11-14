@@ -604,12 +604,12 @@ classdef backtestedPortfolios
 
             %%% For STRATEGY-Wise PSR
             if strcmp(backtestedPortfolios.PSRbenchmark, 'strategyWise')
-                J = size(backtestedPortfolios.Realised_tsPRet_TT,2);
+                J = size(backtestedPortfolios.ExcessReturns,2);
                 PSR_ZeroBenchmark = zeros(J,J);
 
                 for strategy = 1:J
                     for bench_port = 1:J
-                        PSR_ZeroBenchmark(strategy, bench_port) = psr(backtestedPortfolios.Realised_tsPRet_TT{:, strategy}, ...
+                        PSR_ZeroBenchmark(strategy, bench_port) = psr(backtestedPortfolios.ExcessReturns(:, strategy), ...
                             backtestedPortfolios.Realised_tsPRet_TT{:, bench_port});
                     end
                 end
@@ -620,10 +620,10 @@ classdef backtestedPortfolios
 
                 %%% For ZERO SKill (i.e. benchmark = 0) PSR
             elseif  strcmp(backtestedPortfolios.PSRbenchmark, 'zeroSkill')
-                J = size(backtestedPortfolios.RollingPerformance,2);
+                J = size(backtestedPortfolios.ExcessReturns,2);
                 PSR_ZeroBenchmark = zeros(J,1);
                 for strategy = 1:J
-                    PSR_ZeroBenchmark(strategy) = psr(backtestedPortfolios.Realised_tsPRet_TT{:, strategy}, 0);
+                    PSR_ZeroBenchmark(strategy) = psr(backtestedPortfolios.ExcessReturns(:, strategy), 0);
 
                 end
             end
