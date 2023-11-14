@@ -64,7 +64,6 @@ if nargin < 3
     % Specify f = 1 to ensure not to annualise
     sr = geo_sr(dif_returns,1);
 end
-disp(sr)
 
 if nargin < 4
     srStd = sr_std(dif_returns);
