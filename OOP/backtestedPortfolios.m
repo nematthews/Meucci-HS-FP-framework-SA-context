@@ -634,6 +634,52 @@ classdef backtestedPortfolios
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         function backtest_plot_gcf = PerformancePlot(backtestedPortfolios)
+
+            %%% Title based CC: 
+            if backtestedPortfolios.CashConstriant ~= 1 && isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda == 0
+                  CC_percent = (backtestedPortfolios.CashConstriant)*100;
+                title_text = [num2str(CC_percent) '% Cash Constraint'  ...
+                       ' Non-HSFP'];
+            %%% Title based on WINSOR
+            elseif backtestedPortfolios.CashConstriant == 1 && ~isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda == 0
+             title_text = [num2str(backtestedPortfolios.WinsorStd) ' sd. Winsoried Non-HSFP'];
+
+              %%% Title based on Reg
+            elseif backtestedPortfolios.CashConstriant == 1 && isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda ~= 0
+             title_text = ['Regularised \lambda = ' num2str(backtestedPortfolios.RegLambda) ' ' ...
+                 'Non-HSFP'];
+
+             %%% Title based on CC & W
+            elseif backtestedPortfolios.CashConstriant ~= 1 && ~isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda == 0
+                CC_percent = (backtestedPortfolios.CashConstriant)*100;
+                title_text = [num2str(CC_percent) '% Cash Constraint &' num2str(backtestedPortfolios.WinsorStd) ' sd. Winsorised ' ...
+                 'Non-HSFP'];
+
+             %%% Title based on CC & R
+            elseif backtestedPortfolios.CashConstriant ~= 1 && isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda ~= 0
+                CC_percent = (backtestedPortfolios.CashConstriant)*100;
+                title_text = [num2str(CC_percent) ['% Cash Constraint ' ...
+                    '& Regularised \lambda = '] num2str(backtestedPortfolios.RegLambda) ' ' ...
+                 'Non-HSFP'];
+
+             %%% Title based on W & R
+            elseif backtestedPortfolios.CashConstriant == 1 && ~isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda ~= 0
+             title_text = [num2str(backtestedPortfolios.WinsorStd) ' sd. Winsorised & Regularised (\lambda = ' num2str(backtestedPortfolios.RegLambda) ')' ...
+                 ' Non-HSFP'];
+            
+             %%% Title based on W & R & CC
+            elseif backtestedPortfolios.CashConstriant ~= 1 && ~isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda ~= 0
+                CC_percent = (backtestedPortfolios.CashConstriant)*100;
+                title_text = [num2str(CC_percent) '% Cash Constraint, ' ...
+                    'Winsorised & Regularised ' ...
+                 'Non-HSFP' ];
+
+            else
+              title_text = ['Non-HSFP Backtest: TRIs on ', ...
+                num2str(backtestedPortfolios.WindowLength), ...
+                ' Month Rolling Window'];
+            end
+
             figure('InnerPosition', [100, 100, 600, 600]);
 
             colours = [[0, 0, 0.5];           % blue
@@ -656,9 +702,7 @@ classdef backtestedPortfolios
 
             ylabel('Price Index', 'FontSize', 15);
             xlabel('Time', 'FontSize', 15);
-            title(['Non-HSFP Backtest: TRIs on ', ...
-                num2str(backtestedPortfolios.WindowLength), ...
-                ' Month Rolling Window'], 'FontSize', 16);
+            title(title_text, 'FontSize', 16);
             legend(backtestedPortfolios.RollingPerformance.Properties.VariableNames, ...
                 'Location', 'northwest', 'FontSize', 14);
             set(gca, 'FontSize', 12);
