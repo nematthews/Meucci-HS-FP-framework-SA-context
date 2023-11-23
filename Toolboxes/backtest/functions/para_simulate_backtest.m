@@ -77,9 +77,12 @@ if  ~isempty(parameter_configurationMatrix)
     % Populate the cell array with initial objects
     parfor config = 1:parameter_num_configs
         iterativeClass = copy(base_backtestObject);  % Use the copy method
-        iterativeClass.CashConstriant = parameter_configurationMatrix(config, 1);
-        iterativeClass.WinsorStd = parameter_configurationMatrix(config, 2);
-        iterativeClass.RegLambda = parameter_configurationMatrix(config, 3);
+        iterativeClass.HSFPparameters.RollWindow  = parameter_configurationMatrix(config, 1);
+        iterativeClass.HSFPparameters.Tau = parameter_configurationMatrix(config, 2);
+        iterativeClass.HSFPparameters.Z_target = parameter_configurationMatrix(config, 3);
+        iterativeClass.HSFPparameters.Alpha = parameter_configurationMatrix(config, 4);
+        iterativeClass.HSFPparameters.h = parameter_configurationMatrix(config, 5);
+        iterativeClass.HSFPparameters.Gamma = parameter_configurationMatrix(config, 6);
         parameter_test_class1Array{config} = iterativeClass;
     end
 
@@ -91,6 +94,7 @@ if  ~isempty(parameter_configurationMatrix)
     data_simulationCellArray = [];
 end
 end
+
 
 
 
