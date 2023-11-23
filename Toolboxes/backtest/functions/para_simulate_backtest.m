@@ -82,7 +82,8 @@ if  ~isempty(parameter_configurationMatrix)
         iterativeClass.HSFPparameters.Z_target = parameter_configurationMatrix(config, 3);
         iterativeClass.HSFPparameters.Alpha = parameter_configurationMatrix(config, 4);
         iterativeClass.HSFPparameters.h = parameter_configurationMatrix(config, 5);
-        iterativeClass.HSFPparameters.Gamma = parameter_configurationMatrix(config, 6);
+        iterativeClass.HSFPparameters.Tau_prior = parameter_configurationMatrix(config, 6);
+        iterativeClass.HSFPparameters.Gamma = parameter_configurationMatrix(config, 7);
         parameter_test_class1Array{config} = iterativeClass;
     end
 
