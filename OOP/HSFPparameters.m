@@ -1,11 +1,12 @@
 % HSFPparameters class definition
 classdef HSFPparameters
     properties
-        RollWindow          (1,1) double {mustBePositive,mustBeInteger} = 12
+        RollWindow          (1,1) double {mustBePositive} = 12
         Tau                 (1,1) double    {mustBePositive} = 12
-        Alpha               (1,1) double    {mustBePositive} = 0.1
-        Z_target            (1,1) string {mustBeMember(Z_target,{'latest',...
-                                'mean'})} = 'latest'
+        Alpha               (1,1) double    {mustBeGreaterThanOrEqual(Alpha,0)} = 0.1
+        Z_target                     = 'latest'
+        % Z_target            (1,1) string {mustBeMember(Z_target,{'latest',...
+        %                         'mean'})} = 'latest'
         Gamma               (1,1) double    {mustBePositive} = 2
         h                   (1,1) double     {mustBePositive} = 0.5
         Tau_prior           (1,1) double    {mustBePositive} = 12
