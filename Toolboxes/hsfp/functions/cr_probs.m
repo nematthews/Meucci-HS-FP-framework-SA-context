@@ -29,10 +29,10 @@ if istimetable(signal_series)
 end
 
 if strcmp(z_target, 'mean')
-        z_target = mean(signal_series);
+    z_target = mean(signal_series);
 
-    elseif strcmp(z_target, 'latest')
-        z_target = signal_series(end);
+elseif strcmp(z_target, 'latest')
+    z_target = signal_series(end);
 end
 
 %% CDF estimate
