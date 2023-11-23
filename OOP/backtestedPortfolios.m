@@ -652,7 +652,7 @@ classdef backtestedPortfolios
              %%% Title based on CC & W
             elseif backtestedPortfolios.CashConstriant ~= 1 && ~isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda == 0
                 CC_percent = (backtestedPortfolios.CashConstriant)*100;
-                title_text = [num2str(CC_percent) '% Cash Constraint &' num2str(backtestedPortfolios.WinsorStd) ' sd. Winsorised ' ...
+                title_text = [num2str(CC_percent) '% Cash Constraint & ' num2str(backtestedPortfolios.WinsorStd) ' sd. Winsorised ' ...
                  'Non-HSFP'];
 
              %%% Title based on CC & R
