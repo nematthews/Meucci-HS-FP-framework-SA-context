@@ -73,7 +73,7 @@ singal_index = 1:num_signals;
 switch base_backtestObject.Method
 
     case 'rolling_w'
-        %% 1. Rolling Window Time conditioned
+        %% 1. Rolling Window Time conditioned %%%%%%%%%%%%%%%%%%%%%
         RollWindow_range = round(linspace(3, 35, num_parameters)); % Double. Rounded to allow for rolling window
         hyperparameter_set = [singal_index; RollWindow_range];
 
@@ -116,7 +116,7 @@ switch base_backtestObject.Method
         end
 
     case 'exp_decay'
-        %% 2. Exponential Decay Time conditioned
+        %% 2. Exponential Decay Time conditioned %%%%%%%%%%%%%%%%%%%%%
         Alpha_range = linspace(3, 36, 5); % Double
 
         hyperparameter_set = [singal_index; Alpha_range];
@@ -160,7 +160,7 @@ switch base_backtestObject.Method
         end
 
     case 'crisp'
-        %% 3. Crisp State conditioned
+        %% 3. Crisp State conditioned %%%%%%%%%%%%%%%%%%%%%
         Z_target_range = linspace(Sig_min, Sig_max, 5); % Generated based on signal range (range between min and max)
         Alpha_range = linspace(0.1, 1, 5); % Double (needs to be at least 0.1 to allow convergence in MAXSR)
 
@@ -206,7 +206,7 @@ switch base_backtestObject.Method
             parameter_simulationCellArray{config} = OOPbacktest_analysis(parameter_test_class1Array{config});
         end
     case 'kernel'
-        %% 4. Kernel State conditioned
+        %% 4. Kernel State conditioned %%%%%%%%%%%%%%%%%%%%%
         h_range = linspace(0.01, 1, 5); % Double
         Z_target_range = linspace(Sig_min, Sig_max, 5); % Generated based on signal range (range between min and max)
         Alpha_range = linspace(0.1, 1, 5); % Double (needs to be at least 0.1 to allow convergence in MAXSR)
@@ -229,6 +229,31 @@ switch base_backtestObject.Method
                     end
                 end
             end
+        end
+
+        %%%%%%%%%%%%%%% Apply configuration in simulations %%%%%%%
+
+        %%% Create storage for simulation objects
+        parameter_num_configs = size(parameter_configMatrix, 1);
+        parameter_simulationCellArray = cell(1, parameter_num_configs);
+
+        % Create a cell array to store the test objects
+        parameter_test_class1Array = cell(1, parameter_num_configs);
+
+        % Populate the cell array with initial objects
+        parfor config = 1:parameter_num_configs
+            iterativeClass = copy(base_backtestObject);  % Use the copy method
+            iterativeClass.Signals = parameter_configMatrix(config, 1);
+            iterativeClass.HSFPparameters.h = parameter_configMatrix(config, 2);
+            iterativeClass.HSFPparameters.Z_target = parameter_configMatrix(config, 3);
+            iterativeClass.HSFPparameters.Alpha = parameter_configMatrix(config, 4);
+            % assign object
+            parameter_test_class1Array{config} = iterativeClass;
+        end
+
+        % Use parfor to run backtests
+        parfor config = 1:parameter_num_configs
+            parameter_simulationCellArray{config} = OOPbacktest_analysis(parameter_test_class1Array{config});
         end
 
     case 'e_pooling'
@@ -256,37 +281,36 @@ switch base_backtestObject.Method
                 end
             end
         end
+
+        %%%%%%%%%%%%%%% Apply configuration in simulations %%%%%%%
+
+        %%% Create storage for simulation objects
+        parameter_num_configs = size(parameter_configMatrix, 1);
+        parameter_simulationCellArray = cell(1, parameter_num_configs);
+
+        % Create a cell array to store the test objects
+        parameter_test_class1Array = cell(1, parameter_num_configs);
+
+        % Populate the cell array with initial objects
+        parfor config = 1:parameter_num_configs
+            iterativeClass = copy(base_backtestObject);  % Use the copy method
+            iterativeClass.Signals = parameter_configMatrix(config, 1);
+            iterativeClass.HSFPparameters.Tau_prior = parameter_configMatrix(config, 2);
+            iterativeClass.HSFPparameters.Z_target = parameter_configMatrix(config, 3);
+            iterativeClass.HSFPparameters.Alpha = parameter_configMatrix(config, 4);
+            % assign object
+            parameter_test_class1Array{config} = iterativeClass;
+        end
+
+        % Use parfor to run backtests
+        parfor config = 1:parameter_num_configs
+            parameter_simulationCellArray{config} = OOPbacktest_analysis(parameter_test_class1Array{config});
+        end
     otherwise
         % Handle the case when none of the above conditions are met
         error('Invalid method specified.');
 end
 
-
-%% Apply parameter configurations
-%%% Create storage for simulation objects
-parameter_num_configs = size(parameter_configMatrix, 1);
-parameter_simulationCellArray = cell(1, parameter_num_configs);
-
-% Create a cell array to store the test objects
-parameter_test_class1Array = cell(1, parameter_num_configs);
-
-% Populate the cell array with initial objects
-parfor config = 1:parameter_num_configs
-    iterativeClass = copy(base_backtestObject);  % Use the copy method
-    iterativeClass.HSFPparameters.RollWindow  = parameter_configMatrix(config, 1);
-    iterativeClass.HSFPparameters.Tau = parameter_configMatrix(config, 2);
-    iterativeClass.HSFPparameters.Z_target = parameter_configMatrix(config, 3);
-    iterativeClass.HSFPparameters.Alpha = parameter_configMatrix(config, 4);
-    iterativeClass.HSFPparameters.h = parameter_configMatrix(config, 5);
-    iterativeClass.HSFPparameters.Tau_prior = parameter_configMatrix(config, 6);
-    iterativeClass.HSFPparameters.Gamma = parameter_configMatrix(config, 7);
-    parameter_test_class1Array{config} = iterativeClass;
-end
-
-% Use parfor to run backtests
-parfor config = 1:parameter_num_configs
-    parameter_simulationCellArray{config} = OOPbacktest_analysis(parameter_test_class1Array{config});
-end
 end
 
 
