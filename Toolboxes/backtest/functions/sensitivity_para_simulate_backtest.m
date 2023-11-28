@@ -212,6 +212,10 @@ switch base_backtestObject.Method
         Alpha_range = linspace(0.1, 1, 5); % Double (needs to be at least 0.1 to allow convergence in MAXSR)
 
         hyperparameter_set = [signal_series; h_range; Z_target_range; Alpha_range];
+        
+        configurations_gamma1 = [configurations, ones(size(configurations, 1), 1)];
+        configurations_gamma2 = [configurations, ones(size(configurations, 1), 1)];
+        configurations = [configurations_gamma1; configurations_gamma2];
 
         % Initialize an empty matrix to store configurations
         num_configs = size(hyperparameter_set, 2)^size(hyperparameter_set, 1);
