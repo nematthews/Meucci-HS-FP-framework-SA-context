@@ -380,8 +380,6 @@ switch base_backtestObject.Method
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-        
-
         % storage array
         parameter_sim_CellArray = cell(1,1);
 
@@ -416,48 +414,57 @@ switch base_backtestObject.Method
         parameter_configMatrix = [configurations_mean1; configurations_latest2];
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %%%%%%%%%%%%% Loop through all signals %%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%% Loop through each possible sig combo %%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        for signal = 1:num_signals
+        % Loop through the cell array based on num of variables per combo
+        for num = 1:num_variables-1
+            % Loop over each combo
+            for combo = 1:length(all_sig_combos{1,1})
+                sig_idxs = all_sig_combos{num,1}(combo,:);
+                % Subsetting the timetable
+                subsetT = signal_series(:,sig_idxs);
 
-            % update signal per loop
-            base_backtestObject.Signals = signal_series(:,signal);
+                % update signal per loop
+                base_backtestObject.Signals = subsetT;
 
-            %%%%%%%%%%%%%%% Apply configuration in simulations %%%%%%%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%%%%%%%%%%%%%% Apply configuration in simulations %%%%%%%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-            %%% Create storage for simulation objects
-            parameter_num_configs = size(parameter_configMatrix, 1);
-            parameter_simulationCellArray = cell(1, parameter_num_configs);
+                %%% Create storage for simulation objects
+                parameter_num_configs = size(parameter_configMatrix, 1);
+                parameter_simulationCellArray = cell(1, parameter_num_configs);
 
-            % Create a cell array to store the test objects
-            parameter_test_class1Array = cell(1, parameter_num_configs);
+                % Create a cell array to store the test objects
+                parameter_test_class1Array = cell(1, parameter_num_configs);
 
-            % Populate the cell array with initial objects
-            parfor config = 1:parameter_num_configs
-                iterativeClass = copy(base_backtestObject);  % Use the copy method
-                iterativeClass.HSFPparameters.Alpha = parameter_configMatrix(config, 1);
-                iterativeClass.HSFPparameters.Tau_prior = parameter_configMatrix(config, 2);
-                if parameter_configMatrix(config, 3) == 1
-                    iterativeClass.HSFPparameters.Z_target = 'mean';
-                elseif parameter_configMatrix(config, 3) == 2
-                    iterativeClass.HSFPparameters.Z_target = 'latest';
+                % Populate the cell array with initial objects
+                parfor config = 1:parameter_num_configs
+                    iterativeClass = copy(base_backtestObject);  % Use the copy method
+                    iterativeClass.HSFPparameters.Alpha = parameter_configMatrix(config, 1);
+                    iterativeClass.HSFPparameters.Tau_prior = parameter_configMatrix(config, 2);
+                    if parameter_configMatrix(config, 3) == 1
+                        iterativeClass.HSFPparameters.Z_target = 'mean';
+                    elseif parameter_configMatrix(config, 3) == 2
+                        iterativeClass.HSFPparameters.Z_target = 'latest';
+                    end
+
+                    % assign object
+                    parameter_test_class1Array{config} = iterativeClass;
                 end
 
-                % assign object
-                parameter_test_class1Array{config} = iterativeClass;
+                % Use parfor to run backtests
+                parfor config = 1:parameter_num_configs
+                    parameter_simulationCellArray{config} = OOPbacktest_analysis(parameter_test_class1Array{config});
+                end
             end
 
-            % Use parfor to run backtests
-            parfor config = 1:parameter_num_configs
-                parameter_simulationCellArray{config} = OOPbacktest_analysis(parameter_test_class1Array{config});
-            end
             % Accumulate results each signal loop
             parameter_sim_CellArray = horzcat(parameter_sim_CellArray,parameter_simulationCellArray);
         end
 
         % Remove the first cell
         parameter_sim_CellArray(1) = [];
+
     otherwise
         % Handle the case when none of the above conditions are met
         error('Invalid method specified.');
