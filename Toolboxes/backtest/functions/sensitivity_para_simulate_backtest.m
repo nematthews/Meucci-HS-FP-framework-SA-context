@@ -77,7 +77,9 @@ switch base_backtestObject.Method
         RollWindow_range = round(linspace(3, 35, num_parameters)); % Double. Rounded to allow for rolling window
         parameter_configMatrix = RollWindow_range';
 
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%% Apply configuration in simulations %%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         %%% Create storage for simulation objects
         parameter_num_configs = size(parameter_configMatrix, 1);
@@ -105,8 +107,9 @@ switch base_backtestObject.Method
         Tau_range = linspace(3, 36, num_parameters); % Double
         parameter_configMatrix = Tau_range';
 
-
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%% Apply configuration in simulations %%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         %%% Create storage for simulation objects
         parameter_num_configs = size(parameter_configMatrix, 1);
@@ -136,6 +139,9 @@ switch base_backtestObject.Method
 
         Alpha_range = linspace(0.1, 1, num_parameters); % Double (needs to be at least 0.1 to allow convergence in MAXSR)
 
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%% Loop through all signals %%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         for signal = 1:num_signals
 
             %%% Generate configurations %%%%
@@ -200,9 +206,14 @@ switch base_backtestObject.Method
 
         h_range = linspace(0.05, 1, num_parameters); % Double
 
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%% Loop through all signals %%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         for signal = 1:num_signals
 
+
             %%% Generate configurations %%%%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
             % get specific Z_target per signal based on bounds of signal
             [Sig_min,Sig_max] = bounds(signal_series{:,signal});
@@ -235,7 +246,9 @@ switch base_backtestObject.Method
             % update signal per loop
             base_backtestObject.Signals = signal_series(:,signal);
 
+
             %%%%%%%%%%%%%%% Apply configuration in simulations %%%%%%%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
             %%% Create storage for simulation objects
             parameter_num_configs = size(parameter_configMatrix, 1);
@@ -268,15 +281,19 @@ switch base_backtestObject.Method
     case 'e_pooling'
         %% 5. Entropy State conditioned
 
-         % storage array
+        % storage array
         parameter_sim_CellArray = cell(1,1);
 
         Alpha_range = linspace(0.1, 1, num_parameters); % Double (needs to be at least 0.1 to allow convergence in MAXSR)
         Tau_Prior_range = linspace(3, 36, num_parameters); % Double
 
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%% Loop through all signals %%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         for signal = 1:num_signals
 
             %%% Generate configurations %%%%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
             % get specific Z_target per signal based on bounds of signal
             [Sig_min,Sig_max] = bounds(signal_series{:,signal});
@@ -304,6 +321,7 @@ switch base_backtestObject.Method
 
 
             %%%%%%%%%%%%%%% Apply configuration in simulations %%%%%%%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
             %%% Create storage for simulation objects
             parameter_num_configs = size(parameter_configMatrix, 1);
@@ -338,43 +356,75 @@ switch base_backtestObject.Method
     case 'ew_ensemble'
         %% 4. Equally Weighted Time & State conditioned %%%%%%%%%%%%%%%%%%%%%
 
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%% Create Signal Combos %%%%%%
+        % Assuming you have a cell array 'variables' with your 12 variables
+        variables = 1:width(signal_series);
+        % Set hard limit of 3 as max number of varaibles in a given combo
+        num_variables = 3;
+
+        % Initialize an empty cell array to store combinations
+        all_sig_combos = cell(1, 1);
+
+        % Nested loops to generate all combinations
+        for num_combinations = 2:num_variables
+            combinations = nchoosek(variables, num_combinations);
+
+            % Append the current combinations to the overall list
+            all_sig_combos = [all_sig_combos; combinations];
+        end
+
+        % Remove the first cell
+        all_sig_combos(1) = [];
+
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        
+
         % storage array
         parameter_sim_CellArray = cell(1,1);
 
 
-         %%% Generate configurations %%%%
+        %%% Generate configurations %%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
         Alpha_range = linspace(0.1, 1, num_parameters); % Double (needs to be at least 0.1 to allow convergence in MAXSR)
         Tau_Prior_range = linspace(3, 36, num_parameters); % Double
 
         hyperparameter_set = [Alpha_range; Tau_Prior_range];
 
         % Initialize an empty matrix to store configurations
-            num_configs = size(hyperparameter_set, 2)^size(hyperparameter_set, 1);
-            parameter_configMatrix = zeros(num_configs, size(hyperparameter_set, 1));
+        num_configs = size(hyperparameter_set, 2)^size(hyperparameter_set, 1);
+        parameter_configMatrix = zeros(num_configs, size(hyperparameter_set, 1));
 
-            % Nested loops to generate all configurations based on the size of hyperparameter_set
-            col = 1;
-            for config1 = 1:size(hyperparameter_set, 2)
-                for config2 = 1:size(hyperparameter_set, 2)
-                    % Store the current combination of values in the configurations matrix
-                    parameter_configMatrix(col, :) = [hyperparameter_set(1, config1); hyperparameter_set(2, config2)];
-                    col = col + 1;
-                end
+        % Nested loops to generate all configurations based on the size of hyperparameter_set
+        col = 1;
+        for config1 = 1:size(hyperparameter_set, 2)
+            for config2 = 1:size(hyperparameter_set, 2)
+                % Store the current combination of values in the configurations matrix
+                parameter_configMatrix(col, :) = [hyperparameter_set(1, config1); hyperparameter_set(2, config2)];
+                col = col + 1;
             end
+        end
 
-            % Account for the binary option for gamma of kernel:
-            % z_taget = 1 is 'mean' mu(Z)
-            % z_taget = 2 is 'latest' (z_T)
-            configurations_mean1 = [parameter_configMatrix, ones(size(parameter_configMatrix, 1), 1)];
-            configurations_latest2 = [parameter_configMatrix, 2*ones(size(parameter_configMatrix, 1), 1)];
-            parameter_configMatrix = [configurations_mean1; configurations_latest2];
+        % Account for the binary option for gamma of kernel:
+        % z_taget = 1 is 'mean' mu(Z)
+        % z_taget = 2 is 'latest' (z_T)
+        configurations_mean1 = [parameter_configMatrix, ones(size(parameter_configMatrix, 1), 1)];
+        configurations_latest2 = [parameter_configMatrix, 2*ones(size(parameter_configMatrix, 1), 1)];
+        parameter_configMatrix = [configurations_mean1; configurations_latest2];
 
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%% Loop through all signals %%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         for signal = 1:num_signals
-  
+
             % update signal per loop
             base_backtestObject.Signals = signal_series(:,signal);
 
             %%%%%%%%%%%%%%% Apply configuration in simulations %%%%%%%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
             %%% Create storage for simulation objects
             parameter_num_configs = size(parameter_configMatrix, 1);
@@ -393,7 +443,7 @@ switch base_backtestObject.Method
                 elseif parameter_configMatrix(config, 3) == 2
                     iterativeClass.HSFPparameters.Z_target = 'latest';
                 end
-                
+
                 % assign object
                 parameter_test_class1Array{config} = iterativeClass;
             end
