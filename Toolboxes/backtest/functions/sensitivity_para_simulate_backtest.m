@@ -130,15 +130,19 @@ switch base_backtestObject.Method
 
     case 'crisp'
         %% 3. Crisp State conditioned %%%%%%%%%%%%%%%%%%%%%
-
+        
+        % storage array
         parameter_sim_CellArray = cell(1,1);
 
+        Alpha_range = linspace(0.1, 1, num_parameters); % Double (needs to be at least 0.1 to allow convergence in MAXSR)
+
         for signal = 1:num_signals
-            
+
             %%% Generate configurations %%%%
+
+            % get specific Z_target per signal based on bounds of signal
             [Sig_min,Sig_max] = bounds(signal_series{:,signal});
             Z_target_range = linspace(Sig_min, Sig_max, num_parameters); % Generated based on signal range (range between min and max)
-            Alpha_range = linspace(0.1, 1, num_parameters); % Double (needs to be at least 0.1 to allow convergence in MAXSR)
 
             hyperparameter_set = [Z_target_range; Alpha_range];
 
@@ -190,58 +194,76 @@ switch base_backtestObject.Method
 
     case 'kernel'
         %% 4. Kernel State conditioned %%%%%%%%%%%%%%%%%%%%%
-        h_range = linspace(0.01, 1, 5); % Double
-        Z_target_range = linspace(Sig_min, Sig_max, num_parameters); % Generated based on signal range (range between min and max)
-        Alpha_range = linspace(0.1, 1, 5); % Double (needs to be at least 0.1 to allow convergence in MAXSR)
 
-        hyperparameter_set = [signal_series; h_range; Z_target_range; Alpha_range];
+        % storage array
+        parameter_sim_CellArray = cell(1,1);
 
-        configurations_gamma1 = [configurations, ones(size(configurations, 1), 1)];
-        configurations_gamma2 = [configurations, ones(size(configurations, 1), 1)];
-        configurations = [configurations_gamma1; configurations_gamma2];
+        h_range = linspace(0.05, 1, num_parameters); % Double
 
-        % Initialize an empty matrix to store configurations
-        num_configs = size(hyperparameter_set, 2)^size(hyperparameter_set, 1);
-        parameter_configMatrix = zeros(num_configs, size(hyperparameter_set, 1));
+        for signal = 1:num_signals
 
-        % Nested loops to generate all configurations based on the size of hyperparameter_set
-        col = 1;
-        for config1 = 1:size(hyperparameter_set, 2)
-            for config2 = 1:size(hyperparameter_set, 2)
-                for config3 = 1:size(hyperparameter_set, 2)
-                    for config4 = 1:size(hyperparameter_set, 2)
-                        % Store the current combination of values in the configurations matrix
-                        parameter_configMatrix(col, :) = [hyperparameter_set(1, config1); hyperparameter_set(2, config2); hyperparameter_set(3, config3); hyperparameter_set(4, config4)];
-                        col = col + 1;
-                    end
+            %%% Generate configurations %%%%
+            
+            % get specific Z_target per signal based on bounds of signal
+            [Sig_min,Sig_max] = bounds(signal_series{:,signal});
+            Z_target_range = linspace(Sig_min, Sig_max, num_parameters); % Generated based on signal range (range between min and max)
+
+            hyperparameter_set = [h_range; Z_target_range];
+
+
+            % Initialize an empty matrix to store configurations
+            num_configs = size(hyperparameter_set, 2)^size(hyperparameter_set, 1);
+            parameter_configMatrix = zeros(num_configs, size(hyperparameter_set, 1));
+
+            % Nested loops to generate all configurations based on the size of hyperparameter_set
+            col = 1;
+            for config1 = 1:size(hyperparameter_set, 2)
+                for config2 = 1:size(hyperparameter_set, 2)
+                    % Store the current combination of values in the configurations matrix
+                    parameter_configMatrix(col, :) = [hyperparameter_set(1, config1); hyperparameter_set(2, config2)];
+                    col = col + 1;
                 end
             end
+            
+            % Account for the binary option for gamma of kernel:
+            % gamma = 1 is exponential
+            % gamma = 2 is Gaussian
+            configurations_gamma1 = [parameter_configMatrix, ones(size(parameter_configMatrix, 1), 1)];
+            configurations_gamma2 = [parameter_configMatrix, 2*ones(size(parameter_configMatrix, 1), 1)];
+            parameter_configMatrix = [configurations_gamma1; configurations_gamma2];
+            
+            % update signal per loop
+            base_backtestObject.Signals = signal_series(:,signal);
+
+            %%%%%%%%%%%%%%% Apply configuration in simulations %%%%%%%
+
+            %%% Create storage for simulation objects
+            parameter_num_configs = size(parameter_configMatrix, 1);
+            parameter_simulationCellArray = cell(1, parameter_num_configs);
+
+            % Create a cell array to store the test objects
+            parameter_test_class1Array = cell(1, parameter_num_configs);
+
+            % Populate the cell array with initial objects
+            parfor config = 1:parameter_num_configs
+                iterativeClass = copy(base_backtestObject);  % Use the copy method
+                iterativeClass.HSFPparameters.h = parameter_configMatrix(config, 1);
+                iterativeClass.HSFPparameters.Z_target = parameter_configMatrix(config, 2);
+                iterativeClass.HSFPparameters.Gamma = parameter_configMatrix(config, 3);
+                % assign object
+                parameter_test_class1Array{config} = iterativeClass;
+            end
+
+            % Use parfor to run backtests
+            parfor config = 1:parameter_num_configs
+                parameter_simulationCellArray{config} = OOPbacktest_analysis(parameter_test_class1Array{config});
+            end
+            % Accumulate results each signal loop
+            parameter_sim_CellArray = horzcat(parameter_sim_CellArray,parameter_simulationCellArray);
         end
 
-        %%%%%%%%%%%%%%% Apply configuration in simulations %%%%%%%
-
-        %%% Create storage for simulation objects
-        parameter_num_configs = size(parameter_configMatrix, 1);
-        parameter_simulationCellArray = cell(1, parameter_num_configs);
-
-        % Create a cell array to store the test objects
-        parameter_test_class1Array = cell(1, parameter_num_configs);
-
-        % Populate the cell array with initial objects
-        parfor config = 1:parameter_num_configs
-            iterativeClass = copy(base_backtestObject);  % Use the copy method
-            iterativeClass.Signals = parameter_configMatrix(config, 1);
-            iterativeClass.HSFPparameters.h = parameter_configMatrix(config, 2);
-            iterativeClass.HSFPparameters.Z_target = parameter_configMatrix(config, 3);
-            iterativeClass.HSFPparameters.Alpha = parameter_configMatrix(config, 4);
-            % assign object
-            parameter_test_class1Array{config} = iterativeClass;
-        end
-
-        % Use parfor to run backtests
-        parfor config = 1:parameter_num_configs
-            parameter_simulationCellArray{config} = OOPbacktest_analysis(parameter_test_class1Array{config});
-        end
+        % Remove the first cell
+        parameter_sim_CellArray(1) = [];
 
     case 'e_pooling'
         %% 5. Entropy State conditioned
