@@ -23,7 +23,7 @@ function [p_post, DLagrang] = min_relative_entropy(prior, inequalityMatrix, ineq
 % Here: Constrain the 1st moments
 % (Type: array double, [number of EConstraints x 1])
 %
-% options : options that can be specified for optimization
+% options: options that can be specified for optimisation
 % Note: specify using "optimoptions"
 
 
@@ -50,7 +50,7 @@ if nargin < 6 || isempty(options)
     end
 end
 
-%% Optimization initialisation:
+%% Optimisation initialisation:
 
 lv0 = zeros(numVariables + numEqualityConstraints, 1);
 
@@ -131,7 +131,7 @@ end
 
         p = exp(log(prior) - 1 - l' * inequalityMatrix - v' * equalityMatrix);
         p = max(p, 10^(-32));
-        % h = [c; a] * diag(p) * [c; a]'
+        % h = [c; a] * diag(p) * [c; a]';
         mHess = ([inequalityMatrix; equalityMatrix] .* (ones(numVariables + numEqualityConstraints, 1) * p )) * [inequalityMatrix', equalityMatrix'];
     end
 
