@@ -419,7 +419,7 @@ switch base_backtestObject.Method
         % Loop through the cell array based on num of variables per combo
         for num = 1:num_variables-1
             % Loop over each combo
-            for combo = 1:length(all_sig_combos{1,1})
+            for combo = 1:length(all_sig_combos{num,1})
                 sig_idxs = all_sig_combos{num,1}(combo,:);
                 % Subsetting the timetable
                 subsetT = signal_series(:,sig_idxs);
@@ -456,10 +456,13 @@ switch base_backtestObject.Method
                 parfor config = 1:parameter_num_configs
                     parameter_simulationCellArray{config} = OOPbacktest_analysis(parameter_test_class1Array{config});
                 end
+
+                % Accumulate results each signal loop
+                parameter_sim_CellArray = horzcat(parameter_sim_CellArray,parameter_simulationCellArray);
+
             end
 
-            % Accumulate results each signal loop
-            parameter_sim_CellArray = horzcat(parameter_sim_CellArray,parameter_simulationCellArray);
+
         end
 
         % Remove the first cell
