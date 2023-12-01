@@ -74,6 +74,7 @@ switch base_backtestObject.Method
 
     case 'rolling_w'
         %% 1. Rolling Window Time conditioned %%%%%%%%%%%%%%%%%%%%%
+        %%%% rolling_w:   (window) %%%%
         RollWindow_range = round(linspace(3, 35, num_parameters)); % Double. Rounded to allow for rolling window
         parameter_configMatrix = RollWindow_range';
 
@@ -104,6 +105,7 @@ switch base_backtestObject.Method
 
     case 'exp_decay'
         %% 2. Exponential Decay Time conditioned %%%%%%%%%%%%%%%%%%%%%
+         %%%% exp_decay: (tau) %%%%
         Tau_range = linspace(3, 36, num_parameters); % Double
         parameter_configMatrix = Tau_range';
 
@@ -133,6 +135,8 @@ switch base_backtestObject.Method
 
     case 'crisp'
         %% 3. Crisp State conditioned %%%%%%%%%%%%%%%%%%%%%
+        %%% Parameters need:
+        %%%% crisp: (alpha, z_target [can be 'mean','latest' or scalar]) %%%%
 
         % storage array
         parameter_sim_CellArray = cell(1,1);
@@ -200,6 +204,7 @@ switch base_backtestObject.Method
 
     case 'kernel'
         %% 4. Kernel State conditioned %%%%%%%%%%%%%%%%%%%%%
+        %%%% kernel: (h, gamma, z_target [can be 'mean','latest' or scalar]) %%%%
 
         % storage array
         parameter_sim_CellArray = cell(1,1);
@@ -280,6 +285,7 @@ switch base_backtestObject.Method
 
     case 'e_pooling'
         %% 5. Entropy State conditioned
+        %%%% e_pooling: (alpha, tau_prior, z_target [can be 'mean','latest' or scalar])%%%%
 
         % storage array
         parameter_sim_CellArray = cell(1,1);
@@ -355,6 +361,125 @@ switch base_backtestObject.Method
 
     case 'ew_ensemble'
         %% 4. Equally Weighted Time & State conditioned %%%%%%%%%%%%%%%%%%%%%
+        %%%% ew_ensemble: (alpha, tau_prior, z_target [can ONLY be 'mean' or 'latest']) %%%%
+
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%% Create Signal Combos %%%%%%
+        % Assuming you have a cell array 'variables' with your 12 variables
+        variables = 1:width(signal_series);
+        % Set hard limit of 3 as max number of varaibles in a given combo
+        num_variables = 3;
+
+        % Initialize an empty cell array to store combinations
+        all_sig_combos = cell(1, 1);
+
+        % Nested loops to generate all combinations
+        for num_combinations = 2:num_variables
+            combinations = nchoosek(variables, num_combinations);
+
+            % Append the current combinations to the overall list
+            all_sig_combos = [all_sig_combos; combinations];
+        end
+
+        % Remove the first cell
+        all_sig_combos(1) = [];
+
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        % storage array
+        parameter_sim_CellArray = cell(1,1);
+
+
+        %%% Generate configurations %%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        Alpha_range = linspace(0.1, 1, num_parameters); % Double (needs to be at least 0.1 to allow convergence in MAXSR)
+        Tau_Prior_range = linspace(3, 36, num_parameters); % Double
+
+        hyperparameter_set = [Alpha_range; Tau_Prior_range];
+
+        % Initialize an empty matrix to store configurations
+        num_configs = size(hyperparameter_set, 2)^size(hyperparameter_set, 1);
+        parameter_configMatrix = zeros(num_configs, size(hyperparameter_set, 1));
+
+        % Nested loops to generate all configurations based on the size of hyperparameter_set
+        col = 1;
+        for config1 = 1:size(hyperparameter_set, 2)
+            for config2 = 1:size(hyperparameter_set, 2)
+                % Store the current combination of values in the configurations matrix
+                parameter_configMatrix(col, :) = [hyperparameter_set(1, config1); hyperparameter_set(2, config2)];
+                col = col + 1;
+            end
+        end
+
+        % Account for the binary option for gamma of kernel:
+        % z_taget = 1 is 'mean' mu(Z)
+        % z_taget = 2 is 'latest' (z_T)
+        configurations_mean1 = [parameter_configMatrix, ones(size(parameter_configMatrix, 1), 1)];
+        configurations_latest2 = [parameter_configMatrix, 2*ones(size(parameter_configMatrix, 1), 1)];
+        parameter_configMatrix = [configurations_mean1; configurations_latest2];
+
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%% Loop through each possible sig combo %%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % Loop through the cell array based on num of variables per combo
+        for num = 1:num_variables-1
+            % Loop over each combo
+            for combo = 1:length(all_sig_combos{num,1})
+                sig_idxs = all_sig_combos{num,1}(combo,:);
+                % Subsetting the timetable
+                subsetT = signal_series(:,sig_idxs);
+
+                % update signal per loop
+                base_backtestObject.Signals = subsetT;
+
+                %%%%%%%%%%%%%%% Apply configuration in simulations %%%%%%%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+                %%% Create storage for simulation objects
+                parameter_num_configs = size(parameter_configMatrix, 1);
+                parameter_simulationCellArray = cell(1, parameter_num_configs);
+
+                % Create a cell array to store the test objects
+                parameter_test_class1Array = cell(1, parameter_num_configs);
+
+                % Populate the cell array with initial objects
+                parfor config = 1:parameter_num_configs
+                    iterativeClass = copy(base_backtestObject);  % Use the copy method
+                    iterativeClass.HSFPparameters.Alpha = parameter_configMatrix(config, 1);
+                    iterativeClass.HSFPparameters.Tau_prior = parameter_configMatrix(config, 2);
+                    if parameter_configMatrix(config, 3) == 1
+                        iterativeClass.HSFPparameters.Z_target = 'mean';
+                    elseif parameter_configMatrix(config, 3) == 2
+                        iterativeClass.HSFPparameters.Z_target = 'latest';
+                    end
+
+                    % assign object
+                    parameter_test_class1Array{config} = iterativeClass;
+                end
+
+                % Use parfor to run backtests
+                parfor config = 1:parameter_num_configs
+                    parameter_simulationCellArray{config} = OOPbacktest_analysis(parameter_test_class1Array{config});
+                end
+
+                % Accumulate results each signal loop
+                parameter_sim_CellArray = horzcat(parameter_sim_CellArray,parameter_simulationCellArray);
+
+            end
+
+
+        end
+
+        % Remove the first cell
+        parameter_sim_CellArray(1) = [];
+
+
+    case 'cb_ensemble'
+        %% 4. Equally Weighted Time & State conditioned %%%%%%%%%%%%%%%%%%%%%
+        %%%% cb_ensemble: (alpha, tau_prior, z_target [can ONLY be 'mean' or 'latest'] ,
+        % ensemble_wt_method)
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%% Create Signal Combos %%%%%%
