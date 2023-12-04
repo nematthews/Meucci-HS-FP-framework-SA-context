@@ -59,7 +59,7 @@ function [parameter_sim_CellArray] = sensitivity_para_simulate_backtest(base_bac
 % Author: Nina Matthews (2023)
 
 
-% $Revision: 1.2 $ $Date: 2023/10/26 10:23:41 $ $Author: Nina Matthews $
+% $Revision: 1.2 $ $Date: 2023/12/01 10:23:41 $ $Author: Nina Matthews $
 
 %% Setup simulation objects
 % if isa(signal_series,'timetable')

@@ -1,20 +1,23 @@
 function [data_processing_sim_ExcessRet_cellArr] = extractSimExcessRet(sim_cellArr)
-% Calculate the geometric average of input data, allows for annualisation
-% or adjusting for other time periods using f. Typically used to calculate
-% portfolio returns for annualising, if so "f" = 12 if returns are monthly. 
-%
+% Extract the series of excess returns for both MV and HRP portfolios from 
+% each simulated backtest and store them in a single array.
 %
 %% INPUTS:
-% sim_cellArr - 
-% (Type: timetable [T x J])
+% sim_cellArr - array that contains M simulated backtested portfolios where
+% each simulation is based on a different configuration of input
+% parameters.
+% (Type: cell array [1 x M])
 %
-% f - (Optional) number of periods within a yr (e.g 12 for monthly, 
-% 4 for quarterly) - Default = 1 i.e not annualised returns
-% (type: scalar)  
+%% OUTPUT:
+% data_processing_sim_ExcessRet_cellArr - cell array with the first row
+% consissting of the portfolio type names i.e. "MV" & "HRP" and the second
+% row consists of a [T x M] timetable for each portfolio type containing
+% the excess returns from all M simulations.
+% (Type: cell array [2 x 2])
 
 % Author: Nina Matthews (2023)
 
-% $Revision: 1.1 $ $Date: 2023/013/09 14:18:23 $ $Author: Nina Matthews $
+% $Revision: 1.1 $ $Date: 2023/12/04 09:28:07 $ $Author: Nina Matthews $
 
 %%%%%%%% MV Simulations %%%
 % Initialize an empty T x M timetable
