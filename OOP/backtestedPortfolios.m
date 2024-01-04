@@ -11,8 +11,10 @@ classdef backtestedPortfolios
         DataType            (1,1) string =  'backtestedPortfolios'
         ExcessReturns       double
         GeometricSR         double
+        Benchmark_PRets     double
+        MaxDrawDowns        table           = []
         OptPortWts          cell            % Cell array of TTs with dif dimensions
-        Realised_tsPRet_TT  timetable
+        Realised_tsPRet_TT  timetable        
     end
     properties  % Able to be set by user when creating a class object
 
@@ -362,6 +364,8 @@ classdef backtestedPortfolios
             Overlap_tsCash_PRet = table2array(returns_data(Window:t, 'Cash'));
             Overlap_tsCash_PRet(1, :) = 0;
 
+            Benchmark_tsPRets = [Overlap_tsALSI_PRet,Overlap_tsALBI_PRet,Overlap_tsCash_PRet];
+            backtestedPortfolios.Benchmark_PRets = Benchmark_tsPRets;
 
             %% 4. TRIM CONDITION NUMBERS:
             % Trim resulting to window
@@ -468,6 +472,7 @@ classdef backtestedPortfolios
             SR_Overall_Cash = sqrt(12)*((mean(Overlap_tsCash_PRet)- ...
                 mean(returns_data.Cash(Window:t,:)))/std(Overlap_tsCash_PRet));
 
+
             %% 8. Portfolio PERFORMANCE: %%%%%%%%%%%
             %  1. Calculate Geometrically Compounded Returns
             %  2. Trim and store in cell array
@@ -514,6 +519,10 @@ classdef backtestedPortfolios
 
             %% Call attribution functions
             backtestedPortfolios = attribution(backtestedPortfolios);
+
+            %% Call Max Drawdown Table functions
+            backtestedPortfolios.MaxDrawDowns = maxDD(backtestedPortfolios);
+
             % %% 10. Create Timetable with SRs to store cumulative returns in %%%%%%%%%%%
             % Rolling_portfolioSet_SR = timetable(returns_data.Time(Window:t,:), ...
             %     Realised_tsPIndx{2,1}(Window:t,:), ...
@@ -545,27 +554,42 @@ classdef backtestedPortfolios
             % this currently set up to test cb_ensemble for backtest_moments.m function
             attributions_struct = struct('PortfolioNames',[],'AnnualisedRet', ...
                 [], 'AnnualisedRisk',[],'SharpeRatio', [],'AnnualisedSR',[], ...
-                'PSR' ,[], "DSR" ,[],'CVaR',[]);
+                'PSR' ,[], "MaxDD" ,[],'CVaR',[]);
 
             attributions_struct.PortfolioNames = string(backtestedPortfolios.PortfoliosList);
             attributions_struct.AnnualisedRet = annualRet(backtestedPortfolios);
             attributions_struct.AnnualisedRisk = annualRisk(backtestedPortfolios);
-            attributions_struct.SharpeRatio = geo_sr(backtestedPortfolios.ExcessReturns,1);
+            attributions_struct.SharpeRatio = geometric_mthlySR(backtestedPortfolios);
             attributions_struct.AnnualisedSR = geometric_annualSR(backtestedPortfolios);
-            attributions_struct.PSR = backtestPSR(backtestedPortfolios)';
+            %%% Add zeros for PSR for benchmarks
+            all_PSR = [backtestPSR(backtestedPortfolios)',NaN,NaN,NaN];
+            attributions_struct.PSR = all_PSR;
+            %%% Add zeros for MaxDD for cash drawdown
+            MaxDDtable = maxDD(backtestedPortfolios);
+            MaxDDvals =  MaxDDtable{:,1};
+            all_DDs = [MaxDDvals',0];
+            attributions_struct.MaxDD = all_DDs;
 
             % Extract fields from the structure
-            AnnualisedRet = attributions_struct.AnnualisedRet(1:5);
-            AnnualisedRisk = attributions_struct.AnnualisedRisk(1:5);
-            SharpeRatio = attributions_struct.SharpeRatio(1:5);
+            AnnualisedRet = attributions_struct.AnnualisedRet(1:8);
+            AnnualisedRisk = attributions_struct.AnnualisedRisk(1:8);
+            SharpeRatio = attributions_struct.SharpeRatio(1:8);
             AnnualisedSR = attributions_struct.AnnualisedSR;
-            PSR = attributions_struct.PSR(1:5);
+            PSR = attributions_struct.PSR(1:8);
+            MaxDDvals = attributions_struct.MaxDD(1:8);
+
+            % Extract fields from the structure
+            % AnnualisedRet = attributions_struct.AnnualisedRet;
+            % AnnualisedRisk = attributions_struct.AnnualisedRisk;
+            % SharpeRatio = attributions_struct.SharpeRatio;
+            % AnnualisedSR = attributions_struct.AnnualisedSR;
+            % PSR = attributions_struct.PSR;
 
             % Create a table
             AttributionsTable = table(AnnualisedRet', AnnualisedRisk', ...
-                SharpeRatio', AnnualisedSR', PSR', 'VariableNames', ...
-                {'Ann.Return', 'Ann.Risk', 'SR','Ann.SR','PSR'}, ...
-                'RowNames', {'EW', 'MV', 'BalFun (BH)','HRP', 'BalFun (CM)'});
+                SharpeRatio', AnnualisedSR', PSR',MaxDDvals', 'VariableNames', ...
+                {'Ann.Return', 'Ann.Risk', 'SR','Ann.SR','PSR','Max.DD'}, ...
+                'RowNames', {'EW', 'MV', 'BalFun (BH)','HRP', 'BalFun (CM)', 'ALSI','ALBI','Cash'});
 
             backtestedPortfolios.Attributions = AttributionsTable;
         end
@@ -573,9 +597,9 @@ classdef backtestedPortfolios
         % 3.1.  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% %%%%%    Annualised Return Fn %%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+        % Changed to reflect percentage amounts
         function [AnnualisedRet] = annualRet(backtestedPortfolios)
-            AnnualisedRet = geo_ave(backtestedPortfolios.Realised_tsPRet_TT(2:end, :),12);
+            AnnualisedRet = 100*geo_ave(backtestedPortfolios.Realised_tsPRet_TT(2:end, :),12);
         end
 
         % 3.2.  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -586,18 +610,44 @@ classdef backtestedPortfolios
 
             for port = 1:width(backtestedPortfolios.Realised_tsPRet_TT)
                 RealisedRet = backtestedPortfolios.Realised_tsPRet_TT{:, port};
-                AnnualisedRisk(port) = sqrt(12) * sqrt(var(RealisedRet));
+                AnnualisedRisk(port) = 100*(sqrt(12) * sqrt(var(RealisedRet)));
             end
         end
 
-        % 3.3.  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+         % 3.3.  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %% %%%%%  Monthly Geometric SR Fn %%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        function SharpeRatio = geometric_mthlySR(backtestedPortfolios)
+            
+            % benchmark_Attribution 
+            ALSI_Excess = backtestedPortfolios.Benchmark_PRets(:,1)-backtestedPortfolios.Benchmark_PRets(:,3);
+            ALSI_SR = geo_sr(ALSI_Excess,1);
+            ALBI_Excess = backtestedPortfolios.Benchmark_PRets(:,2)-backtestedPortfolios.Benchmark_PRets(:,3);
+            ALBI_SR = geo_sr(ALBI_Excess,1);
+            Cash_SR = geo_sr(backtestedPortfolios.Benchmark_PRets(:,3),1);
+            
+            SharpeRatio = geo_sr(backtestedPortfolios.ExcessReturns,1);
+
+            SharpeRatio = [SharpeRatio,ALSI_SR,ALBI_SR,Cash_SR];
+        end
+
+        % 3.4.  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% %%%%%  Annualised Geometric SR Fn %%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function AnnualisedSR = geometric_annualSR(backtestedPortfolios)
             AnnualisedSR = geo_sr(backtestedPortfolios.ExcessReturns,12);
+
+            % benchmark_Attribution 
+            ALSI_Excess = backtestedPortfolios.Benchmark_PRets(:,1)-backtestedPortfolios.Benchmark_PRets(:,3);
+            ALSI_AnnSR = geo_sr(ALSI_Excess,12);
+            ALBI_Excess = backtestedPortfolios.Benchmark_PRets(:,2)-backtestedPortfolios.Benchmark_PRets(:,3);
+            ALBI_AnnSR = geo_sr(ALBI_Excess,12);
+            Cash_AnnSR = geo_sr(backtestedPortfolios.Benchmark_PRets(:,3),12);
+            
+            AnnualisedSR = [AnnualisedSR,ALSI_AnnSR,ALBI_AnnSR,Cash_AnnSR];
         end
 
-        % 3.4.  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % 3.5.  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% %%%%%  PSR Fn %%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function PSR_ZeroBenchmark = backtestPSR(backtestedPortfolios)
@@ -629,6 +679,38 @@ classdef backtestedPortfolios
             end
         end
 
+        % 3.6.  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %% %%%%%  Maximum Drawdown Fn %%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        function [MaxDDtable] = maxDD(backtestedPortfolios)
+            performanceSeries = table2array(backtestedPortfolios.RollingPerformance);
+            [MaxDD, MaxDDIndex] = maxdrawdown(performanceSeries);
+
+            %%%% Extract START dates based on indices
+            startDatesIdx = MaxDDIndex(1,:);
+            if sum(isnan(startDatesIdx))== 0
+                startDates = backtestedPortfolios.RollingPerformance.Time(startDatesIdx(1,:));
+            % NB NOTE: this else statement is a specific work around of NaN handling
+            % for this data specifically. It will need to be generalised to be
+            % effective on alternative portfolios.
+            else
+                startDates = backtestedPortfolios.RollingPerformance.Time(MaxDDIndex(1,1:7));
+            end
+            %%%% Extract END dates based on indices
+            endDatesIdx = MaxDDIndex(2,:);
+            if sum(isnan(endDatesIdx))== 0
+                endDates = backtestedPortfolios.RollingPerformance.Time(endDatesIdx(1,:));
+            % NB NOTE: this else statement is a specific work around of NaN handling
+            % for this data specifically. It will need to be generalised to be
+            % effective on alternative portfolios.
+            else
+                endDates = backtestedPortfolios.RollingPerformance.Time(MaxDDIndex(1,1:7));
+            end
+
+            MaxDDtable = table(round(100*(MaxDD(1:7)'),4), endDates, startDates,'VariableNames', ...
+                {'Max Drawdown', 'Start Date', 'End Date'}, ...
+                'RowNames', {'EW', 'MV', 'BalFun (BH)','HRP', 'BalFun (CM)', 'ALSI','ALBI'});
+        end
         % 4. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% %%%%% Performance Plot Fn %%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -722,7 +804,7 @@ classdef backtestedPortfolios
             Y = backtestedPortfolios.RollingPerformance.Time;
             % Create fig
             % f1 = figure('OuterPosition', [100, 100, 600, 600]);
-            sgtitle(['Non-HSFP Backtest: ', num2str(backtestedPortfolios.WindowLength), ...
+            sgtitle(['Optimal Weight Surfaces for Backtest: ', num2str(backtestedPortfolios.WindowLength), ...
                 ' Month Rolling Window'], 'FontSize', 13);
             % plot grid
             numRows = 2;
@@ -741,92 +823,8 @@ classdef backtestedPortfolios
                 0.3010 0.7450 0.9330; % light blue
                 0 0.4470 0.7410]; % dark blue
 
-            %%% 1. Equally Weighted %%%%
-            ax(1) = subplot(numRows, numCols, 1);
-            grid on
-            Z = [backtestedPortfolios.OptPortWts{2,1}];
-            h = ribbon(Y,Z,0.5);
-            colormap(ax(1),colours);
-            for i = 1:numel(h)
-                h(i).EdgeColor = colours(i,:);
-            end
-            xlabel('Asset Class')
-            set(gca,'xtick',1:5,'xticklabel',{'ALBI','FINI15','INDI25','RESI20','Cash'});
-            ylabel('Time')
-            zlabel('Opt Weight')
-            view([56.7207012835473 33.9084446444713]);
-            title(['Non-HSFP: ' backtestedPortfolios.OptPortWts{1,1} ...
-                ' Portfolio Controls'],'FontSize', 9);
-
-
-            %%% 2.  MV SR Max %%%%
-            ax(2) = subplot(numRows, numCols, 2);
-            Z = [backtestedPortfolios.OptPortWts{2,2}];
-            grid on
-            h1 = ribbon(Y,Z,0.5);
-            colormap(ax(2),colours);
-            for i = 1:numel(h1)
-                h1(i).EdgeColor = colours(i,:);
-            end
-            xlabel('Asset Class')
-            set(gca,'xtick',1:5,'xticklabel',{'ALBI','FINI15','INDI25','RESI20','Cash'});
-            ylabel('Time')
-            zlabel('Opt Weight')
-            view([57.336 78.226])
-            title(['Non-HSFP: ' backtestedPortfolios.OptPortWts{1,2} ...
-                ' Portfolio Controls'],'FontSize', 9);
-
-
-            %%% 3. BF B-H %%%%
-            ax(3) = subplot(numRows, numCols, 3);
-            Z = [backtestedPortfolios.OptPortWts{2,3}];
-            h2 = ribbon(Y,Z,0.5);
-            colormap(ax(3),BF_colours);
-            for i = 1:numel(h2)
-                h2(i).EdgeColor = BF_colours(i,:);
-            end
-            xlabel('Asset Class')
-            set(gca,'xtick',1:3,'xticklabel',{'ALSI', 'Cash','ALBI'});
-            ylabel('Time')
-            zlabel('Opt Weight')
-            view([60.3745064177363 23.430953351469])
-            title(['Non-HSFP: ' backtestedPortfolios.OptPortWts{1,3} ...
-                ' Portfolio Controls'],'FontSize', 9);
-
-            %%% 4. HRP %%%%
-            ax(4) = subplot(numRows, numCols, 4);
-            Z = [backtestedPortfolios.OptPortWts{2,4}];
-            h3 = ribbon(Y,Z,0.5);
-            colormap(ax(4),colours);
-            for i = 1:numel(h3)
-                h3(i).EdgeColor = colours(i,:);
-            end
-            xlabel('Asset Class')
-            set(gca,'xtick',1:5,'xticklabel',{'ALBI','FINI15','INDI25','RESI20','Cash'});
-            ylabel('Time')
-            zlabel('Opt Weight')
-            view([61.2860583430572 42.5455046439628])
-            title(['Non-HSFP: ' backtestedPortfolios.OptPortWts{1,4} ...
-                ' Portfolio Controls'],'FontSize', 9);
-
-            %%% 5. BF CM %%%%
-            ax(5) = subplot(numRows, numCols, 5);
-            Z = [backtestedPortfolios.OptPortWts{2,5}];
-            h4 = ribbon(Y,Z,0.5);
-            colormap(ax(5),BF_colours);
-            for i = 1:numel(h4)
-                h4(i).EdgeColor = BF_colours(i,:);
-            end
-            xlabel('Asset Class')
-            set(gca,'xtick',1:3,'xticklabel',{'ALSI', 'Cash','ALBI'});
-            ylabel('Time')
-            zlabel('Opt Weight')
-            view([53.0820910151692 23.4309538458165])
-            title(['Non-HSFP: ' backtestedPortfolios.OptPortWts{1,5} ...
-                ' Portfolio Controls'],'FontSize', 9);
-
-            %%% 6. Performance Plot %%%%
-            subplot(numRows, numCols, 6);
+            %%% 1. Performance Plot %%%%
+            subplot(numRows, numCols, 1);
             axis square;
             perform_colours = [[0, 0, 0.5];           % blue
                 0.8500 0.3250 0.0980;  % orange
@@ -854,12 +852,96 @@ classdef backtestedPortfolios
                 'Location', 'northwest', 'FontSize', 6);
             set(gca, 'FontSize', 9);
 
+            %%% 2. Equally Weighted %%%%
+            ax(1) = subplot(numRows, numCols, 2);
+            grid on
+            Z = [backtestedPortfolios.OptPortWts{2,1}];
+            h = ribbon(Y,Z,0.5);
+            colormap(ax(1),colours);
+            for i = 1:numel(h)
+                h(i).EdgeColor = colours(i,:);
+            end
+            xlabel('Asset Class')
+            set(gca,'xtick',1:5,'xticklabel',{'ALBI','FINI15','INDI25','RESI20','Cash'});
+            ylabel('Time')
+            zlabel('Opt Weight')
+            view([56.7207012835473 33.9084446444713]);
+            title(['Non-HSFP: ' backtestedPortfolios.OptPortWts{1,1} ...
+                ' Portfolio Controls'],'FontSize', 9);
 
-            subplot(2,3,1)
-            view([58.18 17.39])
+
+            %%% 3.  MV SR Max %%%%
+            ax(2) = subplot(numRows, numCols, 3);
+            Z = [backtestedPortfolios.OptPortWts{2,2}];
+            grid on
+            h1 = ribbon(Y,Z,0.5);
+            colormap(ax(2),colours);
+            for i = 1:numel(h1)
+                h1(i).EdgeColor = colours(i,:);
+            end
+            xlabel('Asset Class')
+            set(gca,'xtick',1:5,'xticklabel',{'ALBI','FINI15','INDI25','RESI20','Cash'});
+            ylabel('Time')
+            zlabel('Opt Weight')
+            view([57.336 78.226])
+            title(['Non-HSFP: ' backtestedPortfolios.OptPortWts{1,2} ...
+                ' Portfolio Controls'],'FontSize', 9);
+
+
+            %%% 4. BF B-H %%%%
+            ax(3) = subplot(numRows, numCols, 4);
+            Z = [backtestedPortfolios.OptPortWts{2,3}];
+            h2 = ribbon(Y,Z,0.5);
+            colormap(ax(3),BF_colours);
+            for i = 1:numel(h2)
+                h2(i).EdgeColor = BF_colours(i,:);
+            end
+            xlabel('Asset Class')
+            set(gca,'xtick',1:3,'xticklabel',{'ALSI', 'Cash','ALBI'});
+            ylabel('Time')
+            zlabel('Opt Weight')
+            view([60.3745064177363 23.430953351469])
+            title(['Non-HSFP: ' backtestedPortfolios.OptPortWts{1,3} ...
+                ' Portfolio Controls'],'FontSize', 9);
+
+            %%% 5. HRP %%%%
+            ax(4) = subplot(numRows, numCols, 5);
+            Z = [backtestedPortfolios.OptPortWts{2,4}];
+            h3 = ribbon(Y,Z,0.5);
+            colormap(ax(4),colours);
+            for i = 1:numel(h3)
+                h3(i).EdgeColor = colours(i,:);
+            end
+            xlabel('Asset Class')
+            set(gca,'xtick',1:5,'xticklabel',{'ALBI','FINI15','INDI25','RESI20','Cash'});
+            ylabel('Time')
+            zlabel('Opt Weight')
+            view([61.2860583430572 42.5455046439628])
+            title(['Non-HSFP: ' backtestedPortfolios.OptPortWts{1,4} ...
+                ' Portfolio Controls'],'FontSize', 9);
+
+            %%% 6. BF CM %%%%
+            ax(5) = subplot(numRows, numCols, 6);
+            Z = [backtestedPortfolios.OptPortWts{2,5}];
+            h4 = ribbon(Y,Z,0.5);
+            colormap(ax(5),BF_colours);
+            for i = 1:numel(h4)
+                h4(i).EdgeColor = BF_colours(i,:);
+            end
+            xlabel('Asset Class')
+            set(gca,'xtick',1:3,'xticklabel',{'ALSI', 'Cash','ALBI'});
+            ylabel('Time')
+            zlabel('Opt Weight')
+            view([53.0820910151692 23.4309538458165])
+            title(['Non-HSFP: ' backtestedPortfolios.OptPortWts{1,5} ...
+                ' Portfolio Controls'],'FontSize', 9);
+
+
             subplot(2,3,2)
+            view([58.18 17.39])
+            subplot(2,3,3)
             view([69.23 58.45])
-            subplot(2,3,4)
+            subplot(2,3,5)
             view([60.95 25.20])
 
             % Export the fig as a PDF

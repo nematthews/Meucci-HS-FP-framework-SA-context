@@ -1,7 +1,9 @@
 function [geo_SR,geo_ExcessRet_ave,ExcessRet_sd] = geo_sr(dif_returns, f)
 % Calculate the Sharpe Ratio based off geometric averages of the risky
 % asset and a risk free asset given realised returns of the risky and risk
-% less.
+% less. The geometric average is used here as we are not using SR for 
+% prediction and decision making. Historical realised excess returns are used
+% to calculate an indicative measure of historical performance.
 %
 %% INPUT:
 % dif_returns - series of differential/excess realised returns of an asset or portfolio
