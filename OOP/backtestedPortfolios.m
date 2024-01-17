@@ -20,6 +20,7 @@ classdef backtestedPortfolios
 
         WindowLength        (1,1) double = 36
         Returns             timetable
+        Invariants          timetable
         Signals             timetable           % Timetable
         RegLambda           (1,1) double = 0    % Default (no regularisation)
         WinsorStd           double {mustBeNonnegative} = []  % if empty don't winsorise
@@ -39,10 +40,11 @@ classdef backtestedPortfolios
         % 1.  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% %%% CONSTRUCTOR FUNCTION %%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        function backtestedPortfolios = backtestedPortfolios(Returns, ...
+        function backtestedPortfolios = backtestedPortfolios(Returns,Invariants,...
                 WindowLength,MVWts_lb,MVWts_ub,Method,Signals,HSFPparameters)
-            if  (nargin == 7)
+            if  (nargin == 8)
                 backtestedPortfolios.Returns = Returns;
+                backtestedPortfolios.Invariants = Invariants;
                 backtestedPortfolios.WindowLength = WindowLength;
                 backtestedPortfolios.MVWts_lb = MVWts_lb;
                 backtestedPortfolios.MVWts_ub = MVWts_ub;
@@ -50,7 +52,7 @@ classdef backtestedPortfolios
                 backtestedPortfolios.Signals = Signals;
                 backtestedPortfolios.HSFPparameters = HSFPparameters;
             elseif (nargin > 0)
-                error("You need to provide all 7 required inputs " + ...
+                error("You need to provide all 8 required inputs " + ...
                     "(or leave empty for default values): " + ...
                     "Returns, WindowLength, MVWts_lb, MVWts_ub, Method" + ...
                     ", Signals, HSFPparameters. ")
@@ -71,6 +73,7 @@ classdef backtestedPortfolios
             objCopy.MVWts_lb = obj.MVWts_lb;
             objCopy.MVWts_ub = obj.MVWts_ub;
             objCopy.Returns = obj.Returns;
+            objCopy.Invariants = obj.Invariants;
             objCopy.Method = obj.Method;
             objCopy.Signals = obj.Signals;
             objCopy.CashConstriant = obj.CashConstriant;
