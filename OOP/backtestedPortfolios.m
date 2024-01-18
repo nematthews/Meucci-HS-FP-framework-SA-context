@@ -93,32 +93,53 @@ classdef backtestedPortfolios
             % coded with time constraints in mind.
             %
             %% Primary INPUT:
-            %% backtest_object
-            % - contains all info needed to calculate mu & sigma given a selected method.
-            % (Type: 1x1 struct with 6 fields)
+            %% backtestedPortfolios
+            % - self defined class object with properties as listed below
+            % with their expected data type.
             %
-            % backtest_object = struct('returns',[],'Wts_lb',[],
-            % 'Wts_ub',[],'signals',[],'method',[], 'parameters',[]);
+            %% Set/Locked Properties:
+            % PortfoliosList      cell            % cell array
+            % AssetList           cell            % cell array
+            % Attributions        table           % structure
+            % RollingPerformance  timetable       % Timetable
+            % HSFP_Prs            = []            % Empty for storage
+            % NumPortfolios       (1,1) double    % scalar
+            % DataType            (1,1) string =  'backtestedPortfolios'
+            % ExcessReturns       double
+            % GeometricSR         double
+            % Benchmark_PRets     double
+            % MaxDrawDowns        table           = []
+            % OptPortWts          cell            % Cell array of TTs with dif dimensions
+            % Realised_tsPRet_TT  timetable  
             %
-            % 1. backtest_object.returns - historical returns data for J assets
-            % (Type: TimeTable [T x J])
+            %% Free properties that users needs to assign and can adjust
             %
-            % 2. backtest_object.Wts_lb - vector of lower bounds for the asset weights
-            % in the portfolios. (Auxiliary (used elsewhere in backtest_analysis.m))
-            % (Type: double [1 x J])
+            % WindowLength        (1,1) double = 36
+            % Returns             timetable
+            % Invariants          timetable
+            % Signals             timetable           % Timetable
+            % RegLambda           (1,1) double = 0    % Default (no regularisation)
+            % WinsorStd           double {mustBeNonnegative} = []  % if empty don't winsorise
+            % MVWts_lb            (1,:) double        % vector of lower bounds
+            % MVWts_ub            (1,:) double        % Vector of upper bounds
+            % CashConstriant      (1,1) double {mustBeNonnegative} = 1 % Default no constriant
+            % Method              (1,1) string {mustBeMember(Method,{'none', ...
+            %     'rolling_w','exp_decay','crisp', 'kernel', ...
+            %     'e_pooling', 'ew_ensemble', 'cb_ensemble'})} = 'none'
+            % HSFPparameters      HSFPparameters  %structure/class
+            % PSRbenchmark        (1,1) string {mustBeMember(PSRbenchmark,{'zeroSkill',...
+            %     'strategyWise'})} =  'zeroSkill'
             %
-            % 3. backtest_object.Wts_ub - vector of upper bounds for the asset weights
-            % in the portfolios. (Auxiliary (used elsewhere in backtest_analysis.m))
-            % (Type: double [1 x J])
             %
-            % 4. backtest_object.signals - time series of Q state signals.
-            % (Type: Timetable, [T x Q])
+            %% DEFINE ALL PROPERTIES
             %
-            % 5. backtest_object.method - Method to calculate HSFP flexible probabilities.
-            % (Type: char|str )
-            % Options:   - none (default) NOTE: this is not defined below as it is
-            %                                   only used in backtest fn to rather use
-            %                                   normal mean and cov.
+            % See also: HSFPparameters.m as self-defined structure/class
+            %
+            % NB:
+            % HS-FP method options:   
+            %            - none (default) NOTE: this is not defined 
+            %                below as it is only used in backtest fn to 
+            %                rather use normal mean and cov.         
             %            - rolling_w
             %            - exp_decay
             %            - crisp
@@ -127,43 +148,17 @@ classdef backtestedPortfolios
             %            - ew_ensemble
             %            - cb_ensemble
             %
-            % 6. backtest_object.parameters - contains fields for any parameters needed
-            % to calculate FProbs given an method that is selected.
-            % (Type: 1x1 struct with 8 fields)
-            % hsfp_parameters = struct('window',[],'tau',[],'alpha',[],'z_target',[],
-            % 'gamma',[],'h',[], 'tau_prior',[],'ensemble_wt_method',[]);
-            %
-            %% Additional INPUTS:
-            %
-            % Window - window length using the same sample frequency as returns data
-            % (Type: scalar)
-            %
-            % reg_lambda - regularisation parameter used to decrease noise within the
-            % covariance matrix by means of adding a penalty term to the matrix.
-            % (Type: double)
-            %
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %% Example: backtest_object expected  (this case window needed for rolling_w)
+            %% Example: HSFPparameters object parameters expected  
+            % (this case window needed for rolling_w)
             %
-            % hsfp_parameters = struct('window',[],'tau',[],'alpha',[],'z_target',[],
-            % 'gamma',[],'h',[], 'tau_prior',[],'ensemble_wt_method',[]);
-            % hsfp_parameters.window = Window_len (NOTE: cannot exceed Window length
-            % specified in backtest_analysis.m Fn.)
-            % backtest_object = struct('returns',[],'Wts_lb',[],'Wts_ub',[],'signals',
-            % [],'method',[], 'parameters',[]);
-            % backtest_object.returns = returns_TT;
-            % backtest_object.Wts_lb = [ 0 0 0 0 0 ];
-            % backtest_object.Wts_ub = [ 1 1 1 1 0.05];
-            % backtest_object.signals = SIG_SMOOTHED_TT(:,'lagged_SACPIYOY_Index');
-            % NB: signals needs to be a timetable object
-            % backtest_object.method = 'rolling_w';
-            % backtest_object.parameters = hsfp_parameters
+            % 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            % NB NOTE: if backtest_object.method = 'rolling_w' ensure w_len < Window.
+            % NB NOTE: if HSFPparameters.method = 'rolling_w' ensure w_len < Window.
 
             % Author: Nina Matthews (2023)
 
-            % $Revision: 1.1 $ $Date: 2023/07/10 10:24:01 $ $Author: Nina Matthews $
+            % $Revision: 1.1 $ $Date: 2024/01/18 10:24:01 $ $Author: Nina Matthews $
 
 
             %% Data Management
@@ -182,6 +177,7 @@ classdef backtestedPortfolios
             end 
             %%
             returns_data = backtestedPortfolios.Returns;
+            invariant_data = backtestedPortfolios.Invariants;
             Cash = backtestedPortfolios.Returns(:,'Cash');
             signals_data = backtestedPortfolios.Signals;
 
@@ -271,6 +267,7 @@ classdef backtestedPortfolios
                 else
                     % Shift windows of returns and signals for HSFP each loop
                     backtestedPortfolios.Returns = returns_data(1+t-Window:t-1, :);
+                    backtestedPortfolios.Invariants = invariant_data(1+t-Window:t-1, :);
                     backtestedPortfolios.Signals = signals_data(1+t-Window:t-1, :);
                     % Need to calc pr for each window (but type stays the same)
                     [m_t, cov_t,backtestedPortfolios.HSFP_Prs] = backtest_moments(backtestedPortfolios);

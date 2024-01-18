@@ -14,18 +14,21 @@ function [hsfp_mu, hsfp_cov,p] = backtest_moments(backtest_object)
 % 1. backtest_object.Returns - historical Returns data for J assets
 % (Type: TimeTable [T x J])
 %
-% 2. backtest_object.Wts_lb - vector of lower bounds for the asset weights 
+% 2. backtest_object.Invariants - historical invariants data for J assets
+% (Type: TimeTable [T x J])
+%
+% 3. backtest_object.Wts_lb - vector of lower bounds for the asset weights 
 % in the portfolios. (Auxiliary (used elsewhere in backtest_analysis.m))
 % (Type: double [1 x J])
 %
-% 3. backtest_object.Wts_ub - vector of upper bounds for the asset weights
+% 4. backtest_object.Wts_ub - vector of upper bounds for the asset weights
 % in the portfolios. (Auxiliary (used elsewhere in backtest_analysis.m))
 % (Type: double [1 x J])
 %
-% 4. backtest_object.Signals - time series of Q state Signals.
+% 5. backtest_object.Signals - time series of Q state Signals.
 % (Type: Timetable, [T x Q])
 %
-% 5. backtest_object.Methods - Method to calculate HSFP flexible probabilities.
+% 6. backtest_object.Methods - Method to calculate HSFP flexible probabilities.
 % (Type: char|str )
 % Options:   - none (default) NOTE: this is not defined below as it is
 %                                   only used in backtest fn to rather use 
@@ -38,7 +41,7 @@ function [hsfp_mu, hsfp_cov,p] = backtest_moments(backtest_object)
 %            - ew_ensemble
 %            - cb_ensemble
 %
-% 6. backtest_object.HSFPparameters - contains fields for any parameters needed
+% 7. backtest_object.HSFPparameters - contains fields for any parameters needed
 % to calculate FProbs given an Methods that is selected.
 % (Type: 1x1 struct with 8 fields)
 % hsfp_parameters = struct('RollWindow',[],'Tau',[],'Alpha',[],'Z_target',[],
