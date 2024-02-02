@@ -23,6 +23,10 @@ classdef backtestedPortfolios
         Invariants          timetable
         Signals             timetable           % Timetable
         RegLambda           (1,1) double = 0    % Default (no regularisation)
+        MaxDD_cal           (1,1) string {mustBeMember(MaxDD_cal,{'on',...
+            'off'})} =  'off'   % Default (no max Drawdown calc)
+        % if MaxDD_cal set to 'on': calculate max drawdown (might fail for 
+        % certain cases sense can be turned off)
         WinsorStd           double {mustBeNonnegative} = []  % if empty don't winsorise
         MVWts_lb            (1,:) double        % vector of lower bounds
         MVWts_ub            (1,:) double        % Vector of upper bounds
@@ -521,8 +525,17 @@ classdef backtestedPortfolios
             backtestedPortfolios = attribution(backtestedPortfolios);
 
             %% Call Max Drawdown Table functions
-            backtestedPortfolios.MaxDrawDowns = maxDD(backtestedPortfolios);
-
+            if strcmp(backtestedPortfolios.MaxDD_cal, 'off')
+                % do nothing
+            else
+               try
+                backtestedPortfolios.MaxDrawDowns = maxDD(backtestedPortfolios);
+               catch
+                   backtestedPortfolios.MaxDrawDowns = [];
+                   msg = 'An error occurred when calculating max drawdowns. Other functions may be impacted. Turn off to regain functionality.';
+                   warning(msg)
+               end
+            end
             % %% 10. Create Timetable with SRs to store cumulative returns in %%%%%%%%%%%
             % Rolling_portfolioSet_SR = timetable(returns_data.Time(Window:t,:), ...
             %     Realised_tsPIndx{2,1}(Window:t,:), ...
@@ -565,11 +578,20 @@ classdef backtestedPortfolios
             all_PSR = [backtestPSR(backtestedPortfolios)',NaN,NaN,NaN];
             attributions_struct.PSR = all_PSR;
             %%% Add zeros for MaxDD for cash drawdown
-            MaxDDtable = maxDD(backtestedPortfolios);
-            MaxDDvals =  MaxDDtable{:,1};
-            all_DDs = [MaxDDvals',0];
-            attributions_struct.MaxDD = all_DDs;
-
+            try
+                if strcmp(backtestedPortfolios.MaxDD_cal,'on')
+                    MaxDDtable = maxDD(backtestedPortfolios);
+                    MaxDDvals =  MaxDDtable{:,1};
+                    all_DDs = [MaxDDvals',0];
+                    attributions_struct.MaxDD = all_DDs;
+                else 
+                   attributions_struct.MaxDD = ['-','-','-','-','-','-','-','-']; 
+                end
+            catch   
+                attributions_struct.MaxDD = ['-','-','-','-','-','-','-','-'];
+                msg = 'An error occurred when calculating max drawdowns. Other functions may be impacted. Turn off to regain functionality.';
+                warning(msg)
+            end
             % Extract fields from the structure
             AnnualisedRet = attributions_struct.AnnualisedRet(1:8);
             AnnualisedRisk = attributions_struct.AnnualisedRisk(1:8);

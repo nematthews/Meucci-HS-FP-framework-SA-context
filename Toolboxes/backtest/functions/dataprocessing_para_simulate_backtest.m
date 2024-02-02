@@ -4,7 +4,7 @@ function [data_simulationCellArray,parameter_simulationCellArray] = para_simulat
 % configuartion matrix can be constructed manually based on a users choice
 % of specific configuartions that they would like to assess or it can be
 % constructed using a range of values for each hyper parameter and finding
-% all j possible combinations of those values. The out put of the function
+% all j possible combinations of those values. The output of the function
 % results in a cell array object with j different backtestedPortfolio
 % objects.
 %
