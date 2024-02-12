@@ -8,7 +8,7 @@ function [simulationCellArray] = test_simulate_backtest(configurationMatrix, bas
     % Populate the cell array with initial objects
     parfor config = 1:num_configs
         iterativeClass = copy(base_backtestObject);  % Use the copy method
-        iterativeClass.CashConstriant = configurationMatrix(config, 1);
+        iterativeClass.CashConstraint = configurationMatrix(config, 1);
         iterativeClass.WinsorStd = configurationMatrix(config, 2);
         iterativeClass.RegLambda = configurationMatrix(config, 3);
         test_class1Array{config} = iterativeClass;

@@ -30,7 +30,7 @@ classdef backtestedPortfolios
         WinsorStd           double {mustBeNonnegative} = []  % if empty don't winsorise
         MVWts_lb            (1,:) double        % vector of lower bounds
         MVWts_ub            (1,:) double        % Vector of upper bounds
-        CashConstriant   (1,1) double {mustBeNonnegative} = 1 % Default no constriant
+        CashConstraint   (1,1) double {mustBeNonnegative} = 1 % Default no constriant
         Method              (1,1) string {mustBeMember(Method,{'none', ...
             'rolling_w','exp_decay','crisp', 'kernel', ...
             'e_pooling', 'ew_ensemble', 'cb_ensemble'})} = 'none'
@@ -80,7 +80,7 @@ classdef backtestedPortfolios
             objCopy.Invariants = obj.Invariants;
             objCopy.Method = obj.Method;
             objCopy.Signals = obj.Signals;
-            objCopy.CashConstriant = obj.CashConstriant;
+            objCopy.CashConstraint = obj.CashConstraint;
             objCopy.WinsorStd = obj.WinsorStd;
             objCopy.RegLambda = obj.RegLambda;
         
@@ -126,7 +126,7 @@ classdef backtestedPortfolios
             % WinsorStd           double {mustBeNonnegative} = []  % if empty don't winsorise
             % MVWts_lb            (1,:) double        % vector of lower bounds
             % MVWts_ub            (1,:) double        % Vector of upper bounds
-            % CashConstriant      (1,1) double {mustBeNonnegative} = 1 % Default no constriant
+            % CashConstraint      (1,1) double {mustBeNonnegative} = 1 % Default no constriant
             % Method              (1,1) string {mustBeMember(Method,{'none', ...
             %     'rolling_w','exp_decay','crisp', 'kernel', ...
             %     'e_pooling', 'ew_ensemble', 'cb_ensemble'})} = 'none'
@@ -191,7 +191,7 @@ classdef backtestedPortfolios
             returns_data = removevars(returns_data,'JALSHTR_Index');
 
             % Subset for HRP (remove cash as we have hard allocation to cash)
-            if backtestedPortfolios.CashConstriant ~= 1
+            if backtestedPortfolios.CashConstraint ~= 1
                 % if not set to default of non cash constraint
                 HPR_Ret_TT = removevars(returns_data,"Cash");
             else
@@ -238,12 +238,12 @@ classdef backtestedPortfolios
             
             %%% if staement to check if CC = 1 then dont incoporte
             %%% constraint
-            if backtestedPortfolios.CashConstriant == 1
+            if backtestedPortfolios.CashConstraint == 1
                 backtestedPortfolios.MVWts_lb = [0 0 0 0 0];
                 backtestedPortfolios.MVWts_ub = [1 1 1 1 1];
             else
-                backtestedPortfolios.MVWts_lb = [0 0 0 0 backtestedPortfolios.CashConstriant];
-                backtestedPortfolios.MVWts_ub = [1 1 1 1 backtestedPortfolios.CashConstriant];
+                backtestedPortfolios.MVWts_lb = [0 0 0 0 backtestedPortfolios.CashConstraint];
+                backtestedPortfolios.MVWts_ub = [1 1 1 1 backtestedPortfolios.CashConstraint];
             end
             if isempty(backtestedPortfolios.MVWts_lb)
                 backtestedPortfolios.MVWts_lb = zeros(1,n);
@@ -381,12 +381,12 @@ classdef backtestedPortfolios
             % assets. eg SR has 6 but BF have 3.
 
             %%% Adjust HRP if cash constraint is implemented:
-            if backtestedPortfolios.CashConstriant ~=1
+            if backtestedPortfolios.CashConstraint ~=1
                 % Downweight the equity controls to (1- CC)%
-                Overlap_tsHRP_Wts = Overlap_tsHRP_Wts.*(1-backtestedPortfolios.CashConstriant);
+                Overlap_tsHRP_Wts = Overlap_tsHRP_Wts.*(1-backtestedPortfolios.CashConstraint);
 
                 % Cash to add back based on CC 
-                cashConstraint = backtestedPortfolios.CashConstriant * ones(size(Overlap_tsHRP_Wts, 1), 1);
+                cashConstraint = backtestedPortfolios.CashConstraint * ones(size(Overlap_tsHRP_Wts, 1), 1);
                 Overlap_tsHRP_Wts = [Overlap_tsHRP_Wts, cashConstraint];
                
             end
@@ -740,40 +740,40 @@ classdef backtestedPortfolios
         function backtest_plot_gcf = PerformancePlot(backtestedPortfolios)
 
             %%% Title based CC: 
-            if backtestedPortfolios.CashConstriant ~= 1 && isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda == 0
-                  CC_percent = (backtestedPortfolios.CashConstriant)*100;
+            if backtestedPortfolios.CashConstraint ~= 1 && isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda == 0
+                  CC_percent = (backtestedPortfolios.CashConstraint)*100;
                 title_text = [num2str(CC_percent) '% Cash Constraint'  ...
                        ' Non-HSFP'];
             %%% Title based on WINSOR
-            elseif backtestedPortfolios.CashConstriant == 1 && ~isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda == 0
+            elseif backtestedPortfolios.CashConstraint == 1 && ~isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda == 0
              title_text = [num2str(backtestedPortfolios.WinsorStd) ' sd. Winsoried Non-HSFP'];
 
               %%% Title based on Reg
-            elseif backtestedPortfolios.CashConstriant == 1 && isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda ~= 0
+            elseif backtestedPortfolios.CashConstraint == 1 && isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda ~= 0
              title_text = ['Regularised \lambda = ' num2str(backtestedPortfolios.RegLambda) ' ' ...
                  'Non-HSFP'];
 
              %%% Title based on CC & W
-            elseif backtestedPortfolios.CashConstriant ~= 1 && ~isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda == 0
-                CC_percent = (backtestedPortfolios.CashConstriant)*100;
+            elseif backtestedPortfolios.CashConstraint ~= 1 && ~isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda == 0
+                CC_percent = (backtestedPortfolios.CashConstraint)*100;
                 title_text = [num2str(CC_percent) '% Cash Constraint & ' num2str(backtestedPortfolios.WinsorStd) ' sd. Winsorised ' ...
                  'Non-HSFP'];
 
              %%% Title based on CC & R
-            elseif backtestedPortfolios.CashConstriant ~= 1 && isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda ~= 0
-                CC_percent = (backtestedPortfolios.CashConstriant)*100;
+            elseif backtestedPortfolios.CashConstraint ~= 1 && isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda ~= 0
+                CC_percent = (backtestedPortfolios.CashConstraint)*100;
                 title_text = [num2str(CC_percent) ['% Cash Constraint ' ...
                     '& Regularised \lambda = '] num2str(backtestedPortfolios.RegLambda) ' ' ...
                  'Non-HSFP'];
 
              %%% Title based on W & R
-            elseif backtestedPortfolios.CashConstriant == 1 && ~isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda ~= 0
+            elseif backtestedPortfolios.CashConstraint == 1 && ~isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda ~= 0
              title_text = [num2str(backtestedPortfolios.WinsorStd) ' sd. Winsorised & Regularised (\lambda = ' num2str(backtestedPortfolios.RegLambda) ')' ...
                  ' Non-HSFP'];
             
              %%% Title based on W & R & CC
-            elseif backtestedPortfolios.CashConstriant ~= 1 && ~isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda ~= 0
-                CC_percent = (backtestedPortfolios.CashConstriant)*100;
+            elseif backtestedPortfolios.CashConstraint ~= 1 && ~isempty(backtestedPortfolios.WinsorStd) && backtestedPortfolios.RegLambda ~= 0
+                CC_percent = (backtestedPortfolios.CashConstraint)*100;
                 title_text = [num2str(CC_percent) '% Cash Constraint, ' ...
                     'Winsorised & Regularised ' ...
                  'Non-HSFP' ];

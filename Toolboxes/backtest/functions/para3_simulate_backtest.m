@@ -1,6 +1,7 @@
-function [data_simulationCellArray,parameter_simulationCellArray] = para_simulate_backtest(data_configurationMatrix,parameter_configurationMatrix,base_backtestObject)
-% Generates multiple backtest simulations when given a configuration matrix
-% that contains multiple combinations of varying hyper parameters. The
+function [data_simulationCellArray,parameter_simulationCellArray] = para3_simulate_backtest(data_configurationMatrix,parameter_configurationMatrix,base_backtestObject)
+% Generalised for 3 hyper-parameters:
+% Generates multiple backtest simulations when given a j x 3 configuration matrix
+% that contains multiple combinations of 3 varying hyper parameters. The
 % configuartion matrix can be constructed manually based on a users choice
 % of specific configuartions that they would like to assess or it can be
 % constructed using a range of values for each hyper parameter and finding
@@ -11,15 +12,16 @@ function [data_simulationCellArray,parameter_simulationCellArray] = para_simulat
 %% INPUT:
 %
 % data_configurationMatrix - matrix of all possible (j) combinations
-% of all (h) varying hyper-parameters needed for data processing testing.
+% of all (h = 3) varying hyper-parameters needed for data processing testing.
 % Should include combiniations of parameters such as cash contraints, winsoring
 % standard deviations and regularisation lambdas.
 % Where j = length of range of h^h.
 %
 % parameter_configurationMatrix - matrix of all possible (j) combinations
-% of all (h) varying HSFP hyper-parameters needed for sensitivity anaylsis of the HSFP methods.
-% Should include combiniations of parameters such as rolling window length,
-% tau, gamma, alpha etc. (see HSFPparameter class definition for details).
+% of all (h = 3) varying HSFP hyper-parameters needed for sensitivity anaylsis
+% of the HSFP methods. Should include combiniations of parameters such as 
+% rolling window length, tau, gamma, alpha etc. 
+% (see HSFPparameter class definition for details).
 % Where j = length of range of h^h.
 %
 % Eg: with 3 hyper parameters with a range of 15 values, j = 15^3.
@@ -50,7 +52,7 @@ if ~isempty(data_configurationMatrix)
     % Populate the cell array with initial objects
     parfor config = 1:num_data_configs
         iterativeClass = copy(base_backtestObject);  % Use the copy method
-        iterativeClass.CashConstriant = data_configurationMatrix(config, 1);
+        iterativeClass.CashConstraint = data_configurationMatrix(config, 1);
         iterativeClass.WinsorStd = data_configurationMatrix(config, 2);
         iterativeClass.RegLambda = data_configurationMatrix(config, 3);
         data_test_class1Array{config} = iterativeClass;

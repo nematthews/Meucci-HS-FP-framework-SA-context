@@ -46,7 +46,7 @@ if ~isempty(data_configurationMatrix)
 
     % Populate the cell array with initial objects
     for config = 1:data_num_configs
-        base_backtestObject.CashConstriant = data_configurationMatrix(config, 1);
+        base_backtestObject.CashConstraint = data_configurationMatrix(config, 1);
         base_backtestObject.WinsorStd = data_configurationMatrix(config, 2);
         base_backtestObject.RegLambda = data_configurationMatrix(config, 3);
 
@@ -62,7 +62,7 @@ if  ~isempty(parameter_configurationMatrix)
 
     % Populate the cell array with initial objects
     for config = 1:parameter_num_configs
-        base_backtestObject.CashConstriant = parameter_configurationMatrix(config, 1);
+        base_backtestObject.CashConstraint = parameter_configurationMatrix(config, 1);
         base_backtestObject.WinsorStd = parameter_configurationMatrix(config, 2);
         base_backtestObject.RegLambda = parameter_configurationMatrix(config, 3);
 
