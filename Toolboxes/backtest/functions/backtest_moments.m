@@ -80,7 +80,7 @@ function [hsfp_mu, hsfp_cov,p] = backtest_moments(backtest_object)
 
 % $Revision: 1.5 $ $Date: 2023/05/09 19:09:01 $ $Author: Nina Matthews $
 
-%% Selection of HS-FP method for calculating Flexible Probabilites
+%% Selection of HS-FP method for calculating Flexible Probabilities
 if strcmp(backtest_object.Method, 'rolling_w')
     % Rolling Window Prs
     p = rw_probs(backtest_object.Signals,backtest_object.HSFPparameters.RollWindow);
