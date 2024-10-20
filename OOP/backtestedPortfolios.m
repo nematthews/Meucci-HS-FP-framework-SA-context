@@ -819,15 +819,19 @@ classdef backtestedPortfolios
         end
 
 
-        function RollW_Wt_Surfaces_Plot = OptControlPlot(backtestedPortfolios)
+        function RollW_Wt_Surfaces_Plot = OptControlPlot(backtestedPortfolios,signal_name)
 
             f = figure;
             % Set Y axis for datetime object
             Y = backtestedPortfolios.RollingPerformance.Time;
             % Create fig
             % f1 = figure('OuterPosition', [100, 100, 600, 600]);
-            sgtitle(['Optimal Weight Surfaces for Backtest: ', num2str(backtestedPortfolios.WindowLength), ...
-                ' Month Rolling Window'], 'FontSize', 13);
+            if backtestedPortfolios.Method == "none"
+            sgtitle([strcat('Simulation Weight Surfaces, HS-FP Method: ',' ',backtestedPortfolios.Method)], 'FontSize', 12);
+            else
+            sgtitle([strcat('Simulation Weight Surfaces, HS-FP Method: ',' ',backtestedPortfolios.Method,', signal = ',signal_name)], 'FontSize', 12);
+
+            end    
             % plot grid
             numRows = 2;
             numCols = 3;
@@ -968,6 +972,165 @@ classdef backtestedPortfolios
 
             % Export the fig as a PDF
             RollW_Wt_Surfaces_Plot = f;
+            hold off
+        end
+
+
+        %%%%%%%%%%%% Weight surfaces for MV and HRP only
+
+        function MV_HRP_Surfaces_Plot = MV_HRP_OptControlPlot(backtestedPortfolios,signal_name)
+
+            f = figure;
+            % Set Y axis for datetime object
+            Y = backtestedPortfolios.RollingPerformance.Time;
+            % Create fig
+            % f1 = figure('OuterPosition', [100, 100, 600, 600]);
+            if backtestedPortfolios.Method == "none" ||backtestedPortfolios.Method == "rolling_w" ||backtestedPortfolios.Method == "exp_decay" 
+            sgtitle([strcat('Simulation Weight Surfaces, HS-FP Method: ',' ',backtestedPortfolios.Method)], 'FontSize', 12);
+            else
+            sgtitle([strcat('Simulation Weight Surfaces, HS-FP Method: ',' ',backtestedPortfolios.Method,', signal = ',signal_name)], 'FontSize', 12);
+
+            end    
+            % plot grid
+            numRows = 1;
+            numCols = 3;
+
+            % Colour palette: Hexadecimal Colour Codes
+            colours = [0 0.4470 0.7410; % dark blue
+                0.8500 0.3250 0.0980; % orange
+                0.9290 0.6940 0.1250; % yellow
+                0.4940 0.1840 0.5560; % purple
+                0.3010 0.7450 0.9330]; % light blue
+
+
+            % Colour palette: Hexadecimal Colour Codes
+            BF_colours = [0.4660 0.6740 0.1880; % green
+                0.3010 0.7450 0.9330; % light blue
+                0 0.4470 0.7410]; % dark blue
+
+            %%% 1. Performance Plot %%%%
+            subplot(numRows, numCols, 1);
+            axis square;
+            perform_colours = [[0, 0, 0.5];           % blue
+                0.8500 0.3250 0.0980;  % orange
+                0.9290 0.6940 0.1250;  % yellow,
+                0.4940 0.1840 0.5560;  % purple
+                0.4660 0.6740 0.1880;  % green
+                0.3010 0.7450 0.9330;  % light blue
+                0.6350 0.0780 0.1840;  % red
+                0.9290 0.6940 0.6940]; % new color (light pink)
+
+            numLines = size(backtestedPortfolios.RollingPerformance, 2);
+            for i = 1:numLines
+                lineColor = perform_colours(mod(i-1, size(perform_colours, 1))+1, :);
+                plot(backtestedPortfolios.RollingPerformance.Time, ...
+                    backtestedPortfolios.RollingPerformance{:, i}, ...
+                    'LineWidth', 1.2, 'Color', lineColor);
+                hold on;
+            end
+
+            ylabel('Price Index', 'FontSize', 9);
+            xlabel('Time', 'FontSize', 15);
+            % ylim([0.9, 4.5])
+            title('Non-HSFP: Portfolio Cummulative TRIs', 'FontSize', 9);
+            legend(backtestedPortfolios.RollingPerformance.Properties.VariableNames, ...
+                'Location', 'northwest', 'FontSize', 6);
+            set(gca, 'FontSize', 9);
+
+            % %%% 2. Equally Weighted %%%%
+            % ax(1) = subplot(numRows, numCols, 2);
+            % grid on
+            % Z = [backtestedPortfolios.OptPortWts{2,1}];
+            % h = ribbon(Y,Z,0.5);
+            % colormap(ax(1),colours);
+            % for i = 1:numel(h)
+            %     h(i).EdgeColor = colours(i,:);
+            % end
+            % xlabel('Asset Class')
+            % set(gca,'xtick',1:5,'xticklabel',{'ALBI','FINI15','INDI25','RESI20','Cash'});
+            % ylabel('Time')
+            % zlabel('Opt Weight')
+            % view([56.7207012835473 33.9084446444713]);
+            % title(['Non-HSFP: ' backtestedPortfolios.OptPortWts{1,1} ...
+            %     ' Portfolio Controls'],'FontSize', 9);
+
+
+            %%% 3.  MV SR Max %%%%
+            ax(1) = subplot(numRows, numCols, 2);
+            Z = [backtestedPortfolios.OptPortWts{2,2}];
+            grid on
+            h1 = ribbon(Y,Z,0.5);
+            colormap(ax(1),colours);
+            for i = 1:numel(h1)
+                h1(i).EdgeColor = colours(i,:);
+            end
+            xlabel('Asset Class')
+            set(gca,'xtick',1:5,'xticklabel',{'ALBI','FINI15','INDI25','RESI20','Cash'});
+            ylabel('Time')
+            zlabel('Opt Weight')
+            view([57.336 78.226])
+            title(['Non-HSFP: ' backtestedPortfolios.OptPortWts{1,2} ...
+                ' Portfolio Controls'],'FontSize', 9);
+
+
+            %%% 4. BF B-H %%%%
+            % ax(3) = subplot(numRows, numCols, 4);
+            % Z = [backtestedPortfolios.OptPortWts{2,3}];
+            % h2 = ribbon(Y,Z,0.5);
+            % colormap(ax(3),BF_colours);
+            % for i = 1:numel(h2)
+            %     h2(i).EdgeColor = BF_colours(i,:);
+            % end
+            % xlabel('Asset Class')
+            % set(gca,'xtick',1:3,'xticklabel',{'ALSI', 'Cash','ALBI'});
+            % ylabel('Time')
+            % zlabel('Opt Weight')
+            % view([60.3745064177363 23.430953351469])
+            % title(['Non-HSFP: ' backtestedPortfolios.OptPortWts{1,3} ...
+            %     ' Portfolio Controls'],'FontSize', 9);
+
+            %%% 5. HRP %%%%
+            ax(2) = subplot(numRows, numCols, 3);
+            Z = [backtestedPortfolios.OptPortWts{2,4}];
+            h2 = ribbon(Y,Z,0.5);
+            colormap(ax(2),colours);
+            for i = 1:numel(h2)
+                h2(i).EdgeColor = colours(i,:);
+            end
+            xlabel('Asset Class')
+            set(gca,'xtick',1:5,'xticklabel',{'ALBI','FINI15','INDI25','RESI20','Cash'});
+            ylabel('Time')
+            zlabel('Opt Weight')
+            view([61.2860583430572 42.5455046439628])
+            title(['Non-HSFP: ' backtestedPortfolios.OptPortWts{1,4} ...
+                ' Portfolio Controls'],'FontSize', 9);
+
+            % %%% 6. BF CM %%%%
+            % ax(5) = subplot(numRows, numCols, 6);
+            % Z = [backtestedPortfolios.OptPortWts{2,5}];
+            % h4 = ribbon(Y,Z,0.5);
+            % colormap(ax(5),BF_colours);
+            % for i = 1:numel(h4)
+            %     h4(i).EdgeColor = BF_colours(i,:);
+            % end
+            % xlabel('Asset Class')
+            % set(gca,'xtick',1:3,'xticklabel',{'ALSI', 'Cash','ALBI'});
+            % ylabel('Time')
+            % zlabel('Opt Weight')
+            % view([53.0820910151692 23.4309538458165])
+            % title(['Non-HSFP: ' backtestedPortfolios.OptPortWts{1,5} ...
+            %     ' Portfolio Controls'],'FontSize', 9);
+
+
+            % subplot(2,3,2)
+            % view([58.18 17.39])
+            % subplot(2,3,3)
+            % view([69.23 58.45])
+            % subplot(2,3,5)
+            % view([60.95 25.20])
+
+            % Export the fig as a PDF
+            MV_HRP_Surfaces_Plot = f;
             hold off
         end
     end
