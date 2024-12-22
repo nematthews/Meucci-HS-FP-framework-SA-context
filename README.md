@@ -1,10 +1,13 @@
 # Hierarchical Portfolio Stress-Testing with Flexible Probabilities Toolbox
 
 **Version:** 1.0 (R2022b)
+
 **Last Modified:** December 22, 2024
 
 **Author:** Nina Matthews
+
 **Supervisor:** A/Prof. Tim Gebbie
+
 **Project:** Time- and Market-Conditioned Flexible Probabilities: in the Context of the South African Bond Market
 
 ## Copyright and License
