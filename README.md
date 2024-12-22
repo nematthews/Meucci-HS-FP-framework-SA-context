@@ -10,12 +10,13 @@
 
 **Project:** Time- and Market-Conditioned Flexible Probabilities: in the Context of the South African Bond Market
 
+All code provided forms the basis of a research dissertation submitted in fulfillment of the requirements for the degree of MASTERS OF SCIENCE IN MATHEMATICAL STATISTICS in the DEPARTMENT OF STATISTICAL SCIENCES at the UNIVERSITY OF CAPE TOWN, SOUTH AFRICA.
+
 ## Copyright and License
 
 Copyright (c) 2023 Nina Matthews. All rights reserved.
 
 This work, including the source code and documentation within the toolbox, is the intellectual property of the author.
-All code provided forms the basis of a research dissertation submitted in fulfillment of the requirements for the degree of MASTERS OF SCIENCE IN MATHEMATICAL STATISTICS in the DEPARTMENT OF STATISTICAL SCIENCES at the UNIVERSITY OF CAPE TOWN, SOUTH AFRICA.
 
 This toolbox is provided *without any warranty* and is intended for academic and research purposes only. **No commercial use or redistribution is permitted.** You are allowed to use and inspect this code for research purposes, provided you give credit to the author.
 
